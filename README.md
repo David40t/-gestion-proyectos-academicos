@@ -1,58 +1,298 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema web para la gestión y seguimiento de proyectos académicos
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Proyecto de la asignatura **Arquitectura de Software**. Aplicación web que centraliza la gestión de
+proyectos académicos universitarios: integrantes, tareas, avances, comentarios, notificaciones, auditoría
+y seguimiento docente.
 
-## About Laravel
+| | |
+|---|---|
+| **Arquitectura** | Monolito modular · Arquitectura en capas · MVC · Service Layer · Repository Pattern |
+| **Stack** | PHP 8.5 · Laravel 13 · Blade/HTML/CSS/JS · MySQL 8 (compatible con MariaDB) · Eloquent |
+| **Calidad** | 194 pruebas automatizadas (unitarias, funcionales y de arquitectura) · OWASP Top 10 revisado |
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Contenido
+1. [Descripción y objetivo](#1-descripción-y-objetivo)
+2. [Tecnologías](#2-tecnologías)
+3. [Requisitos](#3-requisitos)
+4. [Instalación](#4-instalación)
+5. [Configuración y variables de entorno](#5-configuración-y-variables-de-entorno)
+6. [Migraciones y seeders](#6-migraciones-y-seeders)
+7. [Ejecución](#7-ejecución)
+8. [Usuarios de prueba](#8-usuarios-de-prueba)
+9. [Arquitectura](#9-arquitectura)
+10. [Roles y permisos](#10-roles-y-permisos)
+11. [Módulos y funcionalidades](#11-módulos-y-funcionalidades)
+12. [Pruebas](#12-pruebas)
+13. [Documentación](#13-documentación)
+14. [Alcance del MVP](#14-alcance-del-mvp)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 1. Descripción y objetivo
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+**Problema:** la información de los proyectos académicos suele estar dispersa en chats, correos y hojas de
+cálculo, y el docente tiene dificultades para conocer el avance real de cada equipo.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+**Objetivo:** centralizar la información de los proyectos y facilitar su gestión y seguimiento, con tres
+roles:
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+- **Estudiante:** participa en proyectos, actualiza el avance de sus tareas y comenta.
+- **Líder de proyecto:** estudiante que además gestiona el proyecto, sus integrantes y sus tareas.
+- **Docente:** supervisa proyectos, registra observaciones, cierra proyectos revisados y consulta la auditoría.
 
-## Agentic Development
+## 2. Tecnologías
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+| Capa | Tecnología | Uso |
+|---|---|---|
+| Backend | PHP 8.3+ · **Laravel 13** | Framework MVC, contenedor de dependencias, colas, Scheduler |
+| Autenticación | **Laravel Fortify** | Registro, login, logout y recuperación de contraseña (backend oficial, sin frontend) |
+| Frontend | **Blade** · HTML5 · CSS3 · JavaScript *vanilla* | Vistas del servidor; CSS y JS estáticos en `public/` (sin Node ni Vite) |
+| Base de datos | **MySQL 8** / MariaDB 10.6+ | Persistencia relacional (migraciones portables) |
+| ORM | **Eloquent** | Modelos y relaciones, solo dentro de los repositorios |
+| Pruebas | PHPUnit · SQLite en memoria | Suites Unit, Feature y Architecture |
+| Modelado | draw.io | `docs/diagramas/*.drawio` |
+| Versionado | Git · GitHub | Un commit por fase de desarrollo |
+
+## 3. Requisitos
+
+- PHP **8.3 o superior** con las extensiones `pdo_mysql`, `mbstring`, `openssl`, `intl`, `bcmath`, `fileinfo`
+  y `tokenizer`.
+- **Composer 2.**
+- **MySQL 8** o **MariaDB 10.6+**, con una base de datos y un usuario creados.
+- (Opcional) Una cuenta SMTP (p. ej. Gmail con contraseña de aplicación) para enviar correos reales.
+
+> No se necesita Node.js: el frontend no requiere compilación (ADR-010).
+
+## 4. Instalación
 
 ```bash
-composer require laravel/boost --dev
+# 1. Clonar e instalar dependencias
+git clone <url-del-repositorio> gestion-proyectos-academicos
+cd gestion-proyectos-academicos
+composer install
 
-php artisan boost:install
+# 2. Crear la base de datos (ejemplo MySQL)
+mysql -u root -p -e "CREATE DATABASE gestion_proyectos CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE USER 'gestion_user'@'localhost' IDENTIFIED BY 'una-contraseña-segura';
+  GRANT ALL PRIVILEGES ON gestion_proyectos.* TO 'gestion_user'@'localhost';"
+
+# 3. Configurar el entorno
+cp .env.example .env          # completar DB_* (y MAIL_* si se enviarán correos)
+php artisan key:generate
+
+# 4. Crear las tablas y los datos de demostración
+php artisan migrate --seed
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## 5. Configuración y variables de entorno
 
-## Contributing
+Todas las credenciales van en `.env`, que **nunca** se versiona. `.env.example` está documentado sección
+por sección.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Variable | Descripción | Valor de ejemplo |
+|---|---|---|
+| `APP_ENV` / `APP_DEBUG` | Entorno y modo depuración | `local` / `true` (producción: `production` / `false`) |
+| `APP_URL` | URL base; se usa en los enlaces de los correos | `http://localhost:8000` |
+| `APP_LOCALE` | Idioma de la interfaz y los mensajes | `es` |
+| `DB_CONNECTION` | Motor de base de datos | `mysql` (o `mariadb`) |
+| `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Conexión | `127.0.0.1`, `3306`, `gestion_proyectos`, … |
+| `SESSION_ENCRYPT` | Cifra el contenido de la sesión en BD | `true` |
+| `SESSION_SECURE_COOKIE` | Cookie solo por HTTPS (producción) | `true` en producción |
+| `QUEUE_CONNECTION` | Cola de notificaciones y correos | `database` |
+| `MAIL_MAILER` | `log` (sin envío, escribe en el log) o `smtp` | `log` |
+| `MAIL_HOST`, `MAIL_PORT`, `MAIL_SCHEME`, `MAIL_USERNAME`, `MAIL_PASSWORD` | Servidor SMTP | Gmail: `smtp.gmail.com`, `587`, `smtp` |
+| `MAIL_FROM_ADDRESS` | Remitente de los correos | `no-reply@…` |
+| `MAIL_TO_ADDRESS` | **Solo desarrollo:** redirige todos los correos a un buzón | tu correo (vacío en producción) |
 
-## Code of Conduct
+La configuración de Gmail paso a paso está en [`docs/05-guia-de-pruebas.md`](docs/05-guia-de-pruebas.md) §1.3,
+y la de producción en [`docs/07-seguridad.md`](docs/07-seguridad.md) §4.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 6. Migraciones y seeders
 
-## Security Vulnerabilities
+```bash
+php artisan migrate               # crea o actualiza las tablas
+php artisan migrate --seed        # crea las tablas y carga el catálogo + datos demo
+php artisan migrate:fresh --seed  # BORRA todo y vuelve a empezar (solo desarrollo)
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Seeder | Contenido | Entornos |
+|---|---|---|
+| `RolePermissionSeeder` | 3 roles y 21 permisos (idempotente) | Todos |
+| `DemoUserSeeder` | 4 usuarios de prueba | `local`, `testing` |
+| `DemoProjectSeeder` | Proyecto demo con líder, integrante y docente | `local`, `testing` |
+| `DemoTaskSeeder` | 5 tareas que cubren todos los estados | `local`, `testing` |
+| `DemoCommentSeeder` | Comentarios y una observación docente | `local`, `testing` |
 
-## License
+Los datos demo se crean **mediante los Services**, así que respetan las mismas reglas de negocio que la
+interfaz. Sembrar datos **nunca envía correos reales**.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 7. Ejecución
+
+Se necesitan **dos procesos**:
+
+```bash
+php artisan serve        # Terminal 1: aplicación en http://127.0.0.1:8000
+php artisan queue:work   # Terminal 2: procesa notificaciones y envía correos
+```
+
+Proceso diario (tareas vencidas y recordatorios), ejecutable a mano:
+```bash
+php artisan tasks:check-deadlines
+```
+En producción se programa con el cron de Laravel:
+`* * * * * cd /ruta/proyecto && php artisan schedule:run >> /dev/null 2>&1`.
+
+## 8. Usuarios de prueba
+
+Credenciales ficticias; todos usan la contraseña **`password`**:
+
+| Correo | Rol | Situación en el proyecto demo |
+|---|---|---|
+| `lider@demo.test` | Estudiante + Líder | Líder del proyecto |
+| `estudiante@demo.test` | Estudiante | Integrante con tareas asignadas |
+| `estudiante2@demo.test` | Estudiante | No participa (sirve para probar accesos denegados) |
+| `docente@demo.test` | Docente | Docente responsable |
+
+> Estas contraseñas no cumplen la política de contraseñas (mínimo 8 caracteres con letras y números)
+> porque se cargan directo en la base de datos. Solo existen en desarrollo.
+
+## 9. Arquitectura
+
+**Monolito modular** organizado en **capas** con dependencia estrictamente descendente:
+
+```mermaid
+flowchart TD
+    U([Usuario]) --> V["Presentación<br/>Blade · HTML · CSS · JS"]
+    V --> R["Routes + Middleware<br/>auth · throttle · CSRF · SecurityHeaders"]
+    R --> C["Controllers<br/>Form Requests (validación) · Policies (autorización)"]
+    C --> S["Services<br/>reglas de negocio · transacciones · auditoría · notificaciones"]
+    S --> P["Repositories<br/>Contracts (interfaces) → Eloquent"]
+    P --> M["Models (Eloquent) + Enums"]
+    M --> D[("MySQL / MariaDB")]
+    S -.-> N["Notifications<br/>database + mail, en cola"]
+    S -.-> A["Auditoría<br/>AuditService"]
+```
+
+| Capa | Responsabilidad | No hace |
+|---|---|---|
+| Blade | Mostrar datos ya preparados | Consultas ni reglas de negocio |
+| Controllers | Autorizar, validar con Form Request y delegar en un Service | Lógica de negocio ni consultas |
+| Services | Reglas de negocio, transacciones, auditoría y notificaciones | SQL/Eloquent, HTTP |
+| Repositories | Consultas Eloquent detrás de interfaces | Reglas de negocio |
+| Models | Relaciones, casts y consultas simples de pertenencia | Procesos de negocio |
+
+Estas reglas **no dependen solo de la disciplina**: la suite `tests/Architecture` las verifica sobre el
+código fuente.
+
+**Flujo de una acción importante** (p. ej. el docente registra una observación):
+
+```
+autorizar (Policy) → validar (Form Request) → regla de negocio (Service)
+   → persistir (Repository) + auditar   [misma transacción]
+   → notificar (después del commit; correo en cola si el evento es crítico)
+```
+
+**Estructura del código:**
+
+```
+app/
+├── Http/Controllers, Requests, Middleware   Presentación / entrada HTTP
+├── Policies/                                Autorización por registro
+├── Services/                                Casos de uso (reglas de negocio)
+├── Repositories/Contracts, Eloquent         Acceso a datos
+├── Models/ · Enums/                         Entidades y estados
+├── Notifications/ · Listeners/              Notificaciones y auditoría de autenticación
+└── Console/Commands/                        Proceso diario de fechas límite
+```
+
+Detalle completo en [`docs/01-arquitectura.md`](docs/01-arquitectura.md). Las 17 decisiones arquitectónicas
+(ADR) y su justificación están en [`docs/04-decisiones-arquitectonicas.md`](docs/04-decisiones-arquitectonicas.md).
+
+## 10. Roles y permisos
+
+La autorización tiene **dos niveles**, siempre validados en el backend (ocultar un botón es solo una ayuda
+visual):
+
+1. **Permiso** (por rol, en BD): ¿este *tipo* de usuario puede hacer X? → `Gate::before` con permisos `modulo.accion`.
+2. **Policy** (por registro): ¿puede hacerlo sobre *este* proyecto o tarea? → `app/Policies`.
+
+| Permiso | Estudiante | Líder* | Docente |
+|---|:-:|:-:|:-:|
+| `proyecto.ver` / `proyecto.crear` | ✔ / ✔ | ✔ / ✔ | ✔ / — |
+| `proyecto.editar` · `proyecto.eliminar` · `proyecto.gestionar_integrantes` | | ✔ | |
+| `proyecto.cambiar_estado` | | ✔ | ✔ (finaliza o devuelve desde revisión) |
+| `tarea.ver` | ✔ | ✔ | ✔ |
+| `tarea.crear` · `tarea.editar` · `tarea.asignar` · `tarea.eliminar` | | ✔ | |
+| `tarea.cambiar_estado` | ✔ (solo las suyas) | ✔ | |
+| `comentario.ver` · `crear` · `editar` · `eliminar` (propios) | ✔ | ✔ | ✔ (+ observaciones) |
+| `notificacion.ver` · `notificacion.marcar_leida` | ✔ | ✔ | ✔ |
+| `auditoria.ver` | | | ✔ (sus proyectos) |
+| `auditoria.ver_todo` · `rol.gestionar` | *reservados para un futuro administrador* | | |
+
+\* El líder es un estudiante con el rol adicional `LIDER`, asignado automáticamente cuando lidera un
+proyecto; los permisos de sus roles se suman. Tener el rol no da acceso a proyectos ajenos: la Policy exige
+ser el líder de *ese* proyecto.
+
+**Agregar un rol nuevo no requiere cambiar código:** basta con insertar el rol y asociarle permisos.
+
+Reglas completas: [`docs/03-reglas-de-negocio.md`](docs/03-reglas-de-negocio.md).
+
+## 11. Módulos y funcionalidades
+
+| Módulo | Funcionalidades principales |
+|---|---|
+| Autenticación | Registro (siempre como estudiante), login, logout, recuperación de contraseña, bloqueo tras 5 intentos |
+| Roles y permisos | Catálogo en BD, rol Líder automático, matriz verificada por pruebas |
+| Proyectos | CRUD, ciclo de estados (planeación → en progreso → en revisión → finalizado / cancelado), eliminación lógica |
+| Integrantes | Agregar y retirar (sin duplicados), transferir liderazgo, el líder no puede retirarse |
+| Tareas | CRUD, asignación, prioridad, fechas dentro del proyecto, coherencia estado/avance, papelera y restauración |
+| Seguimiento | Avance calculado a partir de las tareas, conteo por estado, próximas fechas límite, dashboard por rol |
+| Comentarios | En proyectos y tareas, observaciones formales del docente, edición y eliminación por el autor |
+| Notificaciones | Internas + correo para eventos críticos, en cola, recordatorios de fechas límite |
+| Auditoría | Registro inmutable de acciones (con IP y valores anteriores/nuevos), consulta con filtros |
+
+## 12. Pruebas
+
+```bash
+php artisan test                        # 194 pruebas
+php artisan test --testsuite=Architecture
+```
+
+| Suite | Pruebas | Qué verifica |
+|---|---:|---|
+| Unit | 32 | Reglas de los Services con repositorios simulados |
+| Feature | 150 | Flujos HTTP completos, autorización, seguridad, notificaciones, auditoría |
+| Architecture | 12 | Reglas de capas sobre el código fuente |
+
+- Estrategia y trazabilidad requisito → prueba: [`docs/06-estrategia-de-pruebas.md`](docs/06-estrategia-de-pruebas.md).
+- Pruebas manuales paso a paso: [`docs/05-guia-de-pruebas.md`](docs/05-guia-de-pruebas.md).
+
+## 13. Documentación
+
+| Documento | Contenido |
+|---|---|
+| [`01-arquitectura.md`](docs/01-arquitectura.md) | Trazabilidad problema → tecnologías, atributos de calidad, capas, módulos, estructura |
+| [`02-modelo-de-datos.md`](docs/02-modelo-de-datos.md) | Diagrama ER, diccionario de datos, relaciones, integridad y normalización |
+| [`03-reglas-de-negocio.md`](docs/03-reglas-de-negocio.md) | Permisos, estados, reglas por módulo, catálogos de notificaciones y auditoría, rutas |
+| [`04-decisiones-arquitectonicas.md`](docs/04-decisiones-arquitectonicas.md) | 17 ADR: contexto, decisión, justificación y consecuencias |
+| [`05-guia-de-pruebas.md`](docs/05-guia-de-pruebas.md) | Instalación, ejecución y escenarios de prueba manual por módulo |
+| [`06-estrategia-de-pruebas.md`](docs/06-estrategia-de-pruebas.md) | Pirámide de pruebas, trazabilidad, arquitectura, N+1, mutaciones |
+| [`07-seguridad.md`](docs/07-seguridad.md) | Revisión OWASP Top 10, configuración de producción, riesgos aceptados |
+| [`diagramas/`](docs/diagramas) | Diagramas editables en draw.io: capas y modelo entidad-relación |
+
+### Trazabilidad arquitectónica (resumen)
+
+| Problema | Requerimientos | Atributos de calidad | Decisiones | Componentes |
+|---|---|---|---|---|
+| Información dispersa y seguimiento difícil | Proyectos, integrantes, tareas, seguimiento, comentarios, notificaciones, auditoría, permisos | Seguridad · Mantenibilidad · Escalabilidad · Usabilidad · Rendimiento · Trazabilidad | Laravel · MVC · Capas · Service Layer · Repository · Policies/Gates · Notificaciones · Auditoría · MySQL/MariaDB | Blade · Controllers · Services · Repositories · Models · Policies · Notifications · Jobs · BD |
+
+## 14. Alcance del MVP
+
+**Incluido:** autenticación, roles, permisos, usuarios, proyectos, integrantes, tareas, seguimiento,
+comentarios, notificaciones internas, recordatorios, correos para eventos importantes y auditoría.
+
+**Fuera del alcance:** aplicación móvil, chat en tiempo real, videollamadas, WhatsApp/SMS, inteligencia
+artificial, Google Calendar, integración con sistemas institucionales, microservicios, pagos y gestión de
+notas académicas.

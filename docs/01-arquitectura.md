@@ -125,27 +125,37 @@ las notificaciones van después del commit para no avisar de algo que no llegó 
 
 ```
 app/
-├── Actions/Fortify/         CreateNewUser (valida y delega en UserService), ResetUserPassword
-├── Console/Commands/        CheckTaskDeadlines (tasks:check-deadlines)
-├── Enums/                   ProjectStatus, TaskStatus, TaskPriority
+├── Actions/Fortify/          CreateNewUser (valida y delega en UserService), ResetUserPassword
+├── Console/Commands/         CheckTaskDeadlines (tasks:check-deadlines, diario)
+├── Enums/                    ProjectStatus, TaskStatus, TaskPriority (estados y transiciones)
+├── Exceptions/               BusinessRuleException (violación de regla de negocio)
 ├── Http/
-│   ├── Controllers/
-│   └── Requests/            Project/, Task/, Comment/, Member/
-├── Listeners/               RecordSuccessfulLogin, RecordLogout
-├── Models/                 Concerns/HasRoles (hasRole, hasPermission)
-├── Notifications/           Project/, Task/, Comment/
-├── Policies/
-├── Providers/               AppServiceProvider (Gate, Policies), RepositoryServiceProvider (interfaz → implementación)
+│   ├── Controllers/          Controllers delgados, uno por recurso
+│   ├── Middleware/           SecurityHeaders (CSP y cabeceras de seguridad)
+│   └── Requests/             Form Requests: Project/, Task/, Comment/, Member/, Audit/
+├── Listeners/                Auditoría de eventos de autenticación (login, logout, fallos, bloqueo, reset)
+├── Models/                   Entidades Eloquent · Concerns/HasRoles (hasRole, hasPermission)
+├── Notifications/            AppNotification (base) · Project/, Task/, Comment/
+├── Policies/                 ProjectPolicy, TaskPolicy, CommentPolicy, AuditPolicy
+├── Providers/                AppServiceProvider (Gate, modo estricto, replacers) · RepositoryServiceProvider · FortifyServiceProvider
 ├── Repositories/
-│   ├── Contracts/
-│   └── Eloquent/
-└── Services/
+│   ├── Contracts/            Interfaces (8)
+│   └── Eloquent/             Implementaciones con Eloquent
+├── Rules/                    UserHasRole (regla de validación reutilizable)
+├── Services/                 Casos de uso: Project, ProjectMember, Task, TaskDeadline, Progress, Comment,
+│   │                         Dashboard, Role, User, Audit, AuditQuery · AuditContext
+│   ├── Notifications/        NotificationDispatcher (envío) · NotificationService (bandeja)
+│   └── Tasks/                TaskStateResolver (regla pura estado/avance/fecha)
+└── View/Composers/           NavigationComposer (contador de notificaciones del layout)
 database/{migrations, seeders, factories}
-public/{css,js}              estilos y JS estáticos (ADR-010)
-resources/views/{layouts, components, auth, dashboard, projects, tasks, comments, notifications, audits}
-routes/web.php · routes/console.php (Scheduler)
+lang/es/                      validación, autenticación, etiquetas de auditoría
+public/{css,js}               estilos y JS estáticos (ADR-010)
+resources/views/              layouts, components, auth, dashboard, projects, tasks, comments,
+                              notifications, audits, errors
+routes/web.php                rutas web (Fortify registra las de autenticación)
+routes/console.php            Scheduler
 tests/{Unit, Feature, Architecture}
-docs/                        esta documentación + diagramas draw.io
+docs/                         esta documentación + diagramas draw.io
 ```
 
 ## 6. Diagramas

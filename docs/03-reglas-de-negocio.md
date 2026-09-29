@@ -192,21 +192,37 @@ Canal **database** = notificación dentro del sistema. Canal **mail** = correo, 
   eventos de autenticación y roles (sin proyecto) solo los ve quien tenga `auditoria.ver_todo`.
 - **IP y user agent** se toman del request cuando existe. Las acciones del Scheduler quedan con `user_id` e IP en NULL.
 
-## 9. Mapa de rutas (borrador)
+## 9. Mapa de rutas
 
-| Método | URI | Controller | Middleware |
+Generado a partir de `php artisan route:list`. Todas las rutas propias exigen sesión (`auth`). Las de
+autenticación (login, registro, recuperación de contraseña) las registra Fortify. **La autorización fina la
+hace cada Controller con su Policy**; `RouteProtectionTest` y `AuthorizationCoverageTest` verifican ambas cosas.
+
+| Método | URI | Acción | Autorización |
 |---|---|---|---|
-| GET | /dashboard | DashboardController | auth |
-| resource | /projects | ProjectController (index, create, store, show, edit, update, destroy) | auth |
-| PATCH | /projects/{project}/status | ProjectStatusController | auth |
-| POST / DELETE | /projects/{project}/members[/{user}] | ProjectMemberController | auth |
-| PATCH | /projects/{project}/leader | ProjectMemberController@updateLeader | auth |
-| resource (anidado, *scoped*) | /projects/{project}/tasks | TaskController (destroy = soft delete) | auth |
-| PATCH | /projects/{project}/tasks/{task}/restore | TaskController@restore (`withTrashed`) | auth |
-| PATCH | /projects/{project}/tasks/{task}/progress | TaskProgressController | auth |
-| GET | /my-tasks | MyTaskController | auth |
-| POST / PUT / DELETE | /projects/{project}/comments[/{comment}] | CommentController (*scoped*) | auth |
-| GET, PATCH | /notifications, /notifications/{id}/read, /notifications/read-all | NotificationController | auth |
-| GET | /audits | AuditController | auth |
+| GET | `/dashboard` | DashboardController | Datos del propio usuario |
+| GET | `/projects` | ProjectController@index | ProjectPolicy@viewAny |
+| GET, POST | `/projects/create`, `/projects` | ProjectController@create, store | ProjectPolicy@create |
+| GET | `/projects/{project}` | ProjectController@show | ProjectPolicy@view |
+| GET, PUT | `/projects/{project}/edit`, `/projects/{project}` | ProjectController@edit, update | ProjectPolicy@update |
+| DELETE | `/projects/{project}` | ProjectController@destroy (soft delete) | ProjectPolicy@delete |
+| PATCH | `/projects/{project}/status` | ProjectStatusController@update | ProjectPolicy@changeStatus |
+| POST | `/projects/{project}/members` | ProjectMemberController@store | ProjectPolicy@manageMembers |
+| DELETE | `/projects/{project}/members/{member}` | ProjectMemberController@destroy | ProjectPolicy@manageMembers |
+| PATCH | `/projects/{project}/leader` | ProjectMemberController@updateLeader | ProjectPolicy@manageMembers |
+| GET | `/projects/{project}/tasks` | TaskController@index (redirige al proyecto) | — |
+| GET, POST | `/projects/{project}/tasks/create`, `/projects/{project}/tasks` | TaskController@create, store | TaskPolicy@create (+ @assign) |
+| GET | `/projects/{project}/tasks/{task}` | TaskController@show | TaskPolicy@view |
+| GET, PUT | `…/tasks/{task}/edit`, `…/tasks/{task}` | TaskController@edit, update | TaskPolicy@update (+ @assign) |
+| DELETE | `…/tasks/{task}` | TaskController@destroy (soft delete) | TaskPolicy@delete |
+| PATCH | `…/tasks/{task}/restore` | TaskController@restore (`withTrashed`) | TaskPolicy@restore |
+| PATCH | `…/tasks/{task}/progress` | TaskProgressController@update | TaskPolicy@updateProgress |
+| GET | `/my-tasks` | MyTaskController | TaskPolicy@viewAny |
+| POST | `/projects/{project}/comments` | CommentController@store | CommentPolicy@create (+ @markObservation) |
+| PUT, DELETE | `/projects/{project}/comments/{comment}` | CommentController@update, destroy | CommentPolicy@update / @delete |
+| GET | `/notifications` | NotificationController@index | `can:notificacion.ver` |
+| PATCH | `/notifications/{notification}/read`, `/notifications/read-all` | NotificationController@read, readAll | `can:notificacion.marcar_leida` + solo las propias |
+| GET | `/audits`, `/audits/{audit}` | AuditController@index, show | AuditPolicy@viewAny / @view |
 
-La autorización fina no se hace en las rutas: cada Controller llama a su Policy.
+Las rutas anidadas bajo `/projects/{project}/tasks` y `/comments` usan ***scoped binding***: un id de otro
+proyecto responde 404.
