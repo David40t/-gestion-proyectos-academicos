@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@yield('title') · {{ config('app.name') }}</title>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <a href="{{ route('dashboard') }}" class="navbar-brand">Proyectos Académicos</a>
+        <div class="navbar-user">
+            <span>{{ auth()->user()->name }}</span>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="btn btn-link">Cerrar sesión</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="layout">
+        <nav class="sidebar">
+            <a href="{{ route('dashboard') }}" @class(['active' => request()->routeIs('dashboard')])>Dashboard</a>
+            {{-- Los enlaces de cada módulo se agregan en sus fases, protegidos con @can. --}}
+        </nav>
+
+        <main class="content">
+            <x-alert />
+            @yield('content')
+        </main>
+    </div>
+    <script src="{{ asset('js/app.js') }}" defer></script>
+</body>
+</html>

@@ -123,12 +123,15 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
 - **Consecuencias:** cada Service debe acordarse de auditar. Los Feature Tests verifican que cada acción
   crítica genere su registro.
 
-## ADR-010 · Frontend Blade + CSS/JS propios (sin Tailwind)
+## ADR-010 · Frontend Blade + CSS/JS estáticos (sin Tailwind, sin Vite, sin Node.js)
 
-- **Decisión:** usar Blade con componentes (`<x-alert>`, `<x-card>`), CSS propio y JavaScript *vanilla*,
-  empaquetados con Vite (incluido en Laravel). Se retira Tailwind del esqueleto.
-- **Justificación:** el enunciado limita el frontend a Blade, HTML, CSS y JS, sin tecnologías adicionales.
-- **Consecuencias:** hay que escribir y mantener una hoja de estilos propia, pequeña.
+- **Decisión:** Blade con componentes (`<x-alert>`, …), una hoja de estilos propia en `public/css/app.css` y
+  JavaScript *vanilla* en `public/js/app.js`, incluidos con `asset()`. Se retiraron del esqueleto Tailwind,
+  Vite, `package.json` y la vista `welcome`.
+- **Justificación:** el enunciado limita el frontend a Blade, HTML, CSS y JS. Con archivos estáticos no hace
+  falta instalar Node.js ni compilar nada: el proyecto funciona solo con PHP, Composer y la base de datos.
+- **Consecuencias:** no hay minificación ni *cache busting* automáticos. Para un proyecto de este tamaño es
+  aceptable, y el versionado se puede resolver agregando `?v=` al `asset()`.
 
 ## ADR-011 · Pruebas con SQLite en memoria
 

@@ -40,7 +40,9 @@ en los Controllers.**
 | rol.gestionar | | | | Reservado para un futuro rol administrador |
 
 **Roles acumulativos:** un usuario puede tener varios roles (`role_user` es N:M) y sus permisos se suman.
-Un líder tiene los roles `ESTUDIANTE` y `LIDER`.
+Un líder tiene los roles `ESTUDIANTE` y `LIDER`. En la base de datos, `LIDER` solo tiene sus permisos
+*adicionales*; la columna LIDER de la matriz muestra el resultado acumulado. El catálogo está en
+`database/seeders/RolePermissionSeeder.php`.
 
 ### Rol LIDER por proyecto (ADR-006)
 - Quien crea un proyecto queda como su líder (`leader_id`) y como integrante.

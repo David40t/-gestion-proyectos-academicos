@@ -125,13 +125,14 @@ las notificaciones van después del commit para no avisar de algo que no llegó 
 
 ```
 app/
+├── Actions/Fortify/         CreateNewUser (valida y delega en UserService), ResetUserPassword
 ├── Console/Commands/        CheckTaskDeadlines (tasks:check-deadlines)
 ├── Enums/                   ProjectStatus, TaskStatus, TaskPriority
 ├── Http/
 │   ├── Controllers/
 │   └── Requests/            Project/, Task/, Comment/, Member/
 ├── Listeners/               RecordSuccessfulLogin, RecordLogout
-├── Models/
+├── Models/                 Concerns/HasRoles (hasRole, hasPermission)
 ├── Notifications/           Project/, Task/, Comment/
 ├── Policies/
 ├── Providers/               AppServiceProvider (Gate, Policies), RepositoryServiceProvider (interfaz → implementación)
@@ -140,6 +141,7 @@ app/
 │   └── Eloquent/
 └── Services/
 database/{migrations, seeders, factories}
+public/{css,js}              estilos y JS estáticos (ADR-010)
 resources/views/{layouts, components, auth, dashboard, projects, tasks, comments, notifications, audits}
 routes/web.php · routes/console.php (Scheduler)
 tests/{Feature, Unit}
