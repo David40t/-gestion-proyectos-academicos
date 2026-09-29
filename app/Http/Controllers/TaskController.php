@@ -8,6 +8,7 @@ use App\Http\Requests\Task\StoreTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Models\Project;
 use App\Models\Task;
+use App\Services\CommentService;
 use App\Services\ProjectMemberService;
 use App\Services\TaskService;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,7 @@ class TaskController extends Controller
     public function __construct(
         private readonly TaskService $tasks,
         private readonly ProjectMemberService $members,
+        private readonly CommentService $comments,
     ) {}
 
     public function index(Project $project): RedirectResponse
@@ -57,6 +59,7 @@ class TaskController extends Controller
             'project' => $project,
             'task' => $task->load(['assignee:id,name', 'creator:id,name']),
             'selectableStatuses' => TaskStatus::selectable(),
+            'comments' => $this->comments->forTask($task),
         ]);
     }
 

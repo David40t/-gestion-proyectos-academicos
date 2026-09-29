@@ -6,6 +6,7 @@ use App\Http\Requests\Project\StoreProjectRequest;
 use App\Http\Requests\Project\UpdateProjectRequest;
 use App\Models\Project;
 use App\Models\Task;
+use App\Services\CommentService;
 use App\Services\ProgressService;
 use App\Services\ProjectService;
 use App\Services\TaskService;
@@ -21,6 +22,7 @@ class ProjectController extends Controller
         private readonly UserService $users,
         private readonly TaskService $tasks,
         private readonly ProgressService $progress,
+        private readonly CommentService $comments,
     ) {}
 
     public function index(Request $request): View
@@ -63,6 +65,7 @@ class ProjectController extends Controller
             'canManageMembers' => $user->can('manageMembers', $project),
             'availableStudents' => $user->can('manageMembers', $project) ? $this->users->availableStudents($project) : collect(),
             'summary' => $this->progress->summary($project),
+            'comments' => $this->comments->forProject($project),
             'tasks' => $this->tasks->forProject($project),
             'canCreateTasks' => $user->can('create', [Task::class, $project]),
             'trashedTasks' => $user->can('manageTrash', [Task::class, $project]) ? $this->tasks->trashedForProject($project) : collect(),

@@ -207,3 +207,17 @@ h3 { font-size: 1rem; }
 .trash ul { list-style: none; padding: 0; margin: .75rem 0 0; }
 .trash li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .4rem 0; border-bottom: 1px dashed var(--color-border); }
 .trash form { margin: 0; }
+
+/* ---------- Comentarios ---------- */
+.comment-form { margin-bottom: 1.25rem; }
+.comment-form-actions { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.comment-form-actions .checkbox { margin: 0; }
+.comment { padding: .9rem 0; border-top: 1px solid var(--color-border); }
+.comment-observation { padding-left: .9rem; border-left: 4px solid #9a6700; background: #fffaf0; }
+.comment-header { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.comment-body { margin: .5rem 0; white-space: pre-line; overflow-wrap: anywhere; }
+.comment-actions { display: flex; gap: 1rem; align-items: flex-start; font-size: .9rem; }
+.comment-actions form { margin: 0; }
+.comment-actions summary { cursor: pointer; list-style: none; color: var(--color-primary); }
+.comment-actions textarea { width: 100%; min-width: 260px; margin: .5rem 0; padding: .5rem; font: inherit; border: 1px solid var(--color-border); border-radius: var(--radius); }
+.badge-observation { background: #fff4de; color: #9a6700; }

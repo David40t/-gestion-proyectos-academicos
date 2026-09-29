@@ -62,5 +62,7 @@
         </aside>
     </div>
 
-    {{-- Comentarios de la tarea: Fase 7. --}}
+    @can('viewAny', [App\Models\Comment::class, $project])
+        @include('comments.section', ['comments' => $comments, 'task' => $task])
+    @endcan
 @endsection

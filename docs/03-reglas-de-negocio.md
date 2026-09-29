@@ -35,6 +35,7 @@ en los Controllers.**
 | comentario.ver | ✔ | ✔ | ✔ | Acceso al proyecto |
 | comentario.crear | ✔ | ✔ | ✔ | Acceso al proyecto; `is_observation` solo el docente |
 | comentario.editar | ✔ | ✔ | ✔ | Solo el autor del comentario |
+| comentario.eliminar | ✔ | ✔ | ✔ | Solo el autor; eliminación lógica |
 | notificacion.ver | ✔ | ✔ | ✔ | Solo las propias |
 | notificacion.marcar_leida | ✔ | ✔ | ✔ | Solo las propias |
 | auditoria.ver | | | ✔ | Docente: auditoría de sus proyectos supervisados |
@@ -132,9 +133,15 @@ Si el cálculo llegara a ser costoso, la optimización sería cachearlo. Se desc
 porque podría quedar desincronizado.
 
 ## 6. Comentarios
-- Asociados a un proyecto y, opcionalmente, a una tarea del mismo proyecto.
-- Registran autor, fecha y contenido. Solo el autor puede editarlos (la edición se audita).
-- `is_observation = true` solo lo puede marcar un usuario con rol `DOCENTE` sobre sus proyectos supervisados.
+- Se asocian a un proyecto y, opcionalmente, a una tarea **del mismo proyecto**. `CommentService` valida
+  esa pertenencia (ADR-007) y las rutas usan *scoped binding*.
+- Registran autor, fecha y contenido. Solo el autor puede editarlos o eliminarlos (eliminación lógica,
+  ADR-013). Las tres acciones se auditan, y en las ediciones se guardan el texto anterior y el nuevo.
+- Los comentarios generales se muestran en el proyecto; los de cada tarea, en la tarea.
+- Pueden comentar los integrantes del proyecto y su docente responsable. Un docente de otro proyecto no puede.
+- `is_observation = true` (observación formal) solo lo marca el **docente responsable de ese proyecto**
+  (`CommentPolicy::markObservation`). Las observaciones se destacan visualmente y generan correo (Fase 8).
+- El contenido se muestra escapado por Blade (protección XSS), con un máximo de 2000 caracteres.
 
 ## 7. Catálogo de notificaciones
 
@@ -167,7 +174,7 @@ Canal **database** = notificación dentro del sistema. Canal **mail** = correo, 
 | proyectos | `project.created`, `project.updated`, `project.status_changed`, `project.deleted`, `project.leader_changed` |
 | integrantes | `member.added`, `member.removed` |
 | tareas | `task.created`, `task.updated`, `task.assigned`, `task.status_changed`, `task.marked_overdue`, `task.deleted`, `task.restored` |
-| comentarios | `comment.created`, `comment.updated` |
+| comentarios | `comment.created`, `comment.updated`, `comment.deleted` |
 | roles | `role.assigned`, `role.revoked`, `permission.changed` |
 
 - **Solo lectura:** no existen rutas, Policies ni métodos de Repository para editar o borrar auditoría.
@@ -189,7 +196,7 @@ Canal **database** = notificación dentro del sistema. Canal **mail** = correo, 
 | PATCH | /projects/{project}/tasks/{task}/restore | TaskController@restore (`withTrashed`) | auth |
 | PATCH | /projects/{project}/tasks/{task}/progress | TaskProgressController | auth |
 | GET | /my-tasks | MyTaskController | auth |
-| POST / PATCH | /projects/{project}/comments[/{comment}] | CommentController | auth |
+| POST / PUT / DELETE | /projects/{project}/comments[/{comment}] | CommentController (*scoped*) | auth |
 | GET, PATCH | /notifications, /notifications/{id}/read, /notifications/read-all | NotificationController | auth |
 | GET | /audits | AuditController | auth |
 

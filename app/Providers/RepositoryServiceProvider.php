@@ -3,12 +3,14 @@
 namespace App\Providers;
 
 use App\Repositories\Contracts\AuditRepositoryInterface;
+use App\Repositories\Contracts\CommentRepositoryInterface;
 use App\Repositories\Contracts\ProjectMemberRepositoryInterface;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\AuditRepository;
+use App\Repositories\Eloquent\CommentRepository;
 use App\Repositories\Eloquent\ProjectMemberRepository;
 use App\Repositories\Eloquent\ProjectRepository;
 use App\Repositories\Eloquent\RoleRepository;
@@ -26,6 +28,7 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public array $bindings = [
         AuditRepositoryInterface::class => AuditRepository::class,
+        CommentRepositoryInterface::class => CommentRepository::class,
         ProjectMemberRepositoryInterface::class => ProjectMemberRepository::class,
         ProjectRepositoryInterface::class => ProjectRepository::class,
         RoleRepositoryInterface::class => RoleRepository::class,

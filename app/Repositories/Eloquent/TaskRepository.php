@@ -25,6 +25,11 @@ class TaskRepository implements TaskRepositoryInterface
         return $task;
     }
 
+    public function findInProject(Project $project, int $taskId): ?Task
+    {
+        return $project->tasks()->find($taskId);
+    }
+
     public function delete(Task $task): void
     {
         $task->delete();

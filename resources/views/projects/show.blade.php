@@ -124,5 +124,7 @@
 
     @include('projects.partials.tracking')
 
-    {{-- Comentarios: Fase 7. --}}
+    @can('viewAny', [App\Models\Comment::class, $project])
+        @include('comments.section', ['comments' => $comments])
+    @endcan
 @endsection

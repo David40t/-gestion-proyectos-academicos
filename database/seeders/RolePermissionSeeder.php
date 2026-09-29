@@ -29,6 +29,7 @@ class RolePermissionSeeder extends Seeder
         'comentario.ver' => ['comentario', 'Consultar comentarios'],
         'comentario.crear' => ['comentario', 'Crear comentarios'],
         'comentario.editar' => ['comentario', 'Editar comentarios propios'],
+        'comentario.eliminar' => ['comentario', 'Eliminar (lógicamente) comentarios propios'],
         'notificacion.ver' => ['notificacion', 'Consultar notificaciones propias'],
         'notificacion.marcar_leida' => ['notificacion', 'Marcar notificaciones como leídas'],
         'auditoria.ver' => ['auditoria', 'Consultar auditoría'],
@@ -52,7 +53,7 @@ class RolePermissionSeeder extends Seeder
         Role::ESTUDIANTE => [
             'proyecto.ver', 'proyecto.crear',
             'tarea.ver', 'tarea.cambiar_estado',
-            'comentario.ver', 'comentario.crear', 'comentario.editar',
+            'comentario.ver', 'comentario.crear', 'comentario.editar', 'comentario.eliminar',
             'notificacion.ver', 'notificacion.marcar_leida',
         ],
         Role::LIDER => [
@@ -62,7 +63,7 @@ class RolePermissionSeeder extends Seeder
         Role::DOCENTE => [
             'proyecto.ver', 'proyecto.cambiar_estado',
             'tarea.ver',
-            'comentario.ver', 'comentario.crear', 'comentario.editar',
+            'comentario.ver', 'comentario.crear', 'comentario.editar', 'comentario.eliminar',
             'notificacion.ver', 'notificacion.marcar_leida',
             'auditoria.ver',
         ],

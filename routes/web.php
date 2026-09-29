@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MyTaskController;
 use App\Http\Controllers\ProjectController;
@@ -38,4 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('projects/{project}/tasks/{task}/progress', [TaskProgressController::class, 'update'])
         ->scopeBindings()->name('projects.tasks.progress.update');
     Route::get('my-tasks', MyTaskController::class)->name('tasks.mine');
+
+    // Comentarios (del proyecto o de una de sus tareas; scoped: el comentario debe pertenecer al proyecto)
+    Route::resource('projects.comments', CommentController::class)->only(['store', 'update', 'destroy'])->scoped();
 });

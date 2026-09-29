@@ -21,6 +21,8 @@ interface TaskRepositoryInterface
      */
     public function update(Task $task, array $attributes): Task;
 
+    public function findInProject(Project $project, int $taskId): ?Task;
+
     public function delete(Task $task): void;
 
     public function restore(Task $task): void;
