@@ -240,3 +240,20 @@ h3 { font-size: 1rem; }
 .audit-old { color: var(--color-error); }
 .audit-new { color: var(--color-success); }
 code { font-size: .85rem; background: var(--color-bg); padding: .1rem .35rem; border-radius: 4px; }
+
+/* ---------- Dashboard ---------- */
+.stats-dashboard .stat { background: var(--color-surface); }
+.stat-tone-primary .stat-value { color: var(--color-primary); }
+.stat-tone-warning .stat-value { color: #9a6700; }
+.stat-tone-danger .stat-value { color: var(--color-error); }
+.section-header { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.list-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: .6rem 0; border-bottom: 1px solid var(--color-border); }
+.list-item:last-child { border-bottom: 0; }
+.list-item p { margin: .2rem 0 0; }
+.list-item form { margin: 0; }
+.list-item-meta { display: flex; flex-direction: column; align-items: flex-end; gap: .25rem; white-space: nowrap; }
+.project-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.project-card { display: block; padding: 1rem; border: 1px solid var(--color-border); border-radius: var(--radius); color: var(--color-text); text-decoration: none; background: var(--color-surface); }
+.project-card:hover { border-color: var(--color-primary); }
+.project-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; margin-bottom: .35rem; }
+.project-card .muted { margin: 0 0 .6rem; }

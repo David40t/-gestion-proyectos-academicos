@@ -29,4 +29,12 @@ interface CommentRepositoryInterface
      * @return Collection<int, Comment>
      */
     public function forTask(Task $task): Collection;
+
+    /**
+     * Comentarios más recientes de un conjunto de proyectos.
+     *
+     * @param  list<int>  $projectIds
+     * @return Collection<int, Comment>
+     */
+    public function recentInProjects(array $projectIds, int $limit = 5): Collection;
 }

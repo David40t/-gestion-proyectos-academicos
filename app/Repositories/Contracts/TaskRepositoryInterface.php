@@ -68,6 +68,23 @@ interface TaskRepositoryInterface
     public function pastDueOpen(CarbonInterface $today): Collection;
 
     /**
+     * Conteos para el dashboard sobre las tareas de un responsable o de un conjunto de proyectos:
+     * ['pending' => abiertas no vencidas, 'due_soon' => abiertas que vencen entre hoy y $until, 'overdue' => vencidas].
+     *
+     * @param  list<int>|null  $projectIds
+     * @return array{pending: int, due_soon: int, overdue: int}
+     */
+    public function deadlineStats(?User $assignee, ?array $projectIds, CarbonInterface $until): array;
+
+    /**
+     * Próximas tareas abiertas (pendientes, en progreso o vencidas), ordenadas por fecha límite.
+     *
+     * @param  list<int>|null  $projectIds
+     * @return Collection<int, Task>
+     */
+    public function nextOpen(?User $assignee, ?array $projectIds, int $limit = 6): Collection;
+
+    /**
      * Tareas abiertas con responsable, que vencen entre $from y $until y aún no fueron recordadas.
      *
      * @return Collection<int, Task>

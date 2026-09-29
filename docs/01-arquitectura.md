@@ -81,7 +81,7 @@ Blade nunca ejecuta consultas.
 | 4 | Proyectos | `ProjectController` | `ProjectService` | `ProjectRepository` | `ProjectPolicy`, `ProjectStatus` |
 | 5 | Integrantes | `ProjectMemberController` | `ProjectMemberService` | `ProjectMemberRepository` | — |
 | 6 | Tareas | `TaskController`, `TaskProgressController`, `MyTaskController` | `TaskService`, `Tasks\TaskStateResolver` | `TaskRepository` | `TaskPolicy`, `TaskStatus`, `TaskPriority` |
-| 7 | Seguimiento | `ProjectController@show`, `DashboardController` | `ProgressService`, `DashboardService` | `TaskRepository` (agregados) | Comando `tasks:check-deadlines` (diario, `routes/console.php`) |
+| 7 | Seguimiento | `ProjectController@show`, `DashboardController` | `ProgressService`, `DashboardService` | `TaskRepository` (`deadlineStats`, `nextOpen`), `ProjectRepository` (`withStats*`), `CommentRepository`, `AuditRepository` | Comando `tasks:check-deadlines` (diario, `routes/console.php`) |
 | 8 | Comentarios | `CommentController` | `CommentService` | `CommentRepository` | `CommentPolicy` |
 | 9 | Notificaciones | `NotificationController` | `Notifications\NotificationDispatcher`, `Notifications\NotificationService`, `TaskDeadlineService` | `NotificationRepository` | `AppNotification` y clases en `app/Notifications`, `NavigationComposer` |
 | 10 | Auditoría | `AuditController` (solo index/show) | `AuditService` (registro), `AuditQueryService` (consulta) | `AuditRepository` | `AuditPolicy`, Listeners, `lang/es/audit.php` (etiquetas) |

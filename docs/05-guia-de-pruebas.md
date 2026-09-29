@@ -161,7 +161,23 @@ php artisan tasks:check-deadlines
 | D3 | Como líder, cambiar la fecha límite de esa tarea a mañana y volver a ejecutar | Se envía un nuevo recordatorio |
 | D4 | Tareas abiertas con fecha límite pasada | Pasan a **Vencida**. Responsable y líder reciben un correo |
 
-### 3.9 Auditoría
+### 3.9 Dashboard por rol
+Valores esperados con los datos recién sembrados (`migrate:fresh --seed`):
+
+| Usuario | Tarjetas | Secciones |
+|---|---|---|
+| estudiante | 1 proyecto · 1 activo · **1 tarea pendiente** · 1 vence en 7 días · **1 vencida** | Mis proyectos, Mis próximas tareas, Notificaciones |
+| lider | 1 proyecto · 1 activo · 1 pendiente · 1 vence pronto · 0 vencidas | **Proyectos que lideras** (integrantes, tareas abiertas, vencidas, avance) + las del estudiante |
+| docente | 1 supervisado · 1 activo · **3 pendientes** (todo el proyecto) · 2 vencen pronto · 1 vencida | Proyectos supervisados, Próximas entregas, Comentarios recientes, Actividad reciente, Notificaciones |
+| estudiante2 | Todo en 0 | Mensaje "Aún no participas en ningún proyecto" con enlace para crear uno |
+
+| # | Pasos | Resultado esperado |
+|---|---|---|
+| DB1 | Como estudiante, completar "Modelo entidad-relación" y volver al dashboard | Tareas pendientes y "vencen en 7 días" bajan en 1 |
+| DB2 | Como docente, registrar una observación y volver al dashboard | Aparece en "Comentarios recientes" y en "Actividad reciente" |
+| DB3 | Pulsar "Ver" en una notificación del dashboard | Lleva al recurso y el contador de no leídas baja |
+
+### 3.10 Auditoría
 | # | Usuario | Pasos | Resultado esperado |
 |---|---|---|---|
 | AU1 | docente | Menú → Auditoría | Solo aparecen los registros de sus proyectos, sin inicios de sesión |

@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    public function __construct(private readonly DashboardService $dashboard) {}
+
     /**
-     * Dashboard base. Las métricas por rol se incorporan en la Fase 10 (DashboardService).
+     * Dashboard adaptado a la perspectiva del usuario (estudiante, líder o docente).
      */
     public function __invoke(Request $request): View
     {
-        $user = $request->user();
-
         return view('dashboard.index', [
-            'user' => $user,
-            'roles' => $user->roles->pluck('display_name')->join(', '),
+            'user' => $request->user(),
+            ...$this->dashboard->for($request->user()),
         ]);
     }
 }

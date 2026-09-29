@@ -6,6 +6,7 @@ use App\Models\Audit;
 use App\Repositories\Contracts\AuditRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 /**
  * Solo expone escritura (create) y lectura (search): no existen métodos para modificar ni eliminar.
@@ -33,5 +34,15 @@ class AuditRepository implements AuditRepositoryInterface
             ->latest('id')
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    public function recentInProjects(array $projectIds, int $limit = 8): Collection
+    {
+        return Audit::query()
+            ->with(['user:id,name', 'project:id,title'])
+            ->whereIn('project_id', $projectIds)
+            ->latest('id')
+            ->limit($limit)
+            ->get();
     }
 }

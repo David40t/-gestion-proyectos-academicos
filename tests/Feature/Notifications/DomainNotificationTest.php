@@ -166,6 +166,7 @@ class DomainNotificationTest extends TestCase
         $task = Task::factory()->create([
             'project_id' => $this->project->id,
             'assigned_to' => $this->member->id,
+            'due_date' => now()->addDays(2), // fecha fija: la factory usa una aleatoria
             'due_reminder_sent_at' => now(),
         ]);
 

@@ -4,6 +4,7 @@ namespace App\Repositories\Contracts;
 
 use App\Models\Audit;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 interface AuditRepositoryInterface
 {
@@ -20,4 +21,12 @@ interface AuditRepositoryInterface
      * @return LengthAwarePaginator<int, Audit>
      */
     public function search(array $filters, ?array $projectIds, int $perPage = 20): LengthAwarePaginator;
+
+    /**
+     * Actividad reciente de un conjunto de proyectos.
+     *
+     * @param  list<int>  $projectIds
+     * @return Collection<int, Audit>
+     */
+    public function recentInProjects(array $projectIds, int $limit = 8): Collection;
 }

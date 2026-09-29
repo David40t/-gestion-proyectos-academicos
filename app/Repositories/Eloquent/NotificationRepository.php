@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Repositories\Contracts\NotificationRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Collection;
 
 class NotificationRepository implements NotificationRepositoryInterface
 {
@@ -17,6 +18,11 @@ class NotificationRepository implements NotificationRepositoryInterface
     public function unreadCount(User $user): int
     {
         return $user->unreadNotifications()->count();
+    }
+
+    public function latestUnread(User $user, int $limit = 5): Collection
+    {
+        return $user->unreadNotifications()->limit($limit)->get();
     }
 
     public function findForUser(User $user, string $id): DatabaseNotification

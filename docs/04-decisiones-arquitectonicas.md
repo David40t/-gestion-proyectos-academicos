@@ -179,3 +179,17 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
     promedios y route binding. Solo la ruta de restauración usa `withTrashed()`.
   - Las claves foráneas `ON DELETE CASCADE` solo actúan ante un borrado físico, que la aplicación no realiza.
 
+## ADR-014 · Dashboard compuesto por un Service según la perspectiva del usuario
+
+- **Contexto:** el enunciado pide un dashboard con información distinta para estudiante, líder y docente.
+- **Decisión:** `DashboardService::for()` elige la perspectiva (docente o estudiante, y agrega la sección de
+  líder cuando corresponde) y obtiene cada bloque de consultas agregadas de los repositorios: `withCount`,
+  `withAvg` y `SUM(CASE …)` en una sola consulta para los indicadores de tareas.
+- **Justificación:**
+  - Es el único punto del sistema donde el contenido depende del rol (en el resto se usan permisos y
+    Policies). Queda centralizado y es fácil de explicar.
+  - El número de consultas es constante: no crece con la cantidad de proyectos. Una prueba lo verifica
+    (≤ 20 consultas).
+- **Consecuencias:** un rol nuevo con otra perspectiva requiere agregar un método al Service y sus
+  parciales Blade, sin tocar el resto del sistema.
+

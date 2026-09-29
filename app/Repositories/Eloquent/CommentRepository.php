@@ -36,4 +36,14 @@ class CommentRepository implements CommentRepositoryInterface
     {
         return $task->comments()->with('author:id,name')->latest()->get();
     }
+
+    public function recentInProjects(array $projectIds, int $limit = 5): Collection
+    {
+        return Comment::query()
+            ->with(['author:id,name', 'project:id,title', 'task:id,title'])
+            ->whereIn('project_id', $projectIds)
+            ->latest()
+            ->limit($limit)
+            ->get();
+    }
 }

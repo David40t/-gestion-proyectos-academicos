@@ -33,6 +33,24 @@ interface ProjectRepositoryInterface
     public function countLedBy(User $user): int;
 
     /**
+     * Proyectos donde el usuario es integrante, con estadísticas para el dashboard
+     * (tasks_avg_progress, members_count, open_tasks_count, overdue_tasks_count).
+     *
+     * @return Collection<int, Project>
+     */
+    public function withStatsWhereMember(User $user): Collection;
+
+    /**
+     * @return Collection<int, Project>
+     */
+    public function withStatsLedBy(User $user): Collection;
+
+    /**
+     * @return Collection<int, Project>
+     */
+    public function withStatsSupervisedBy(User $user): Collection;
+
+    /**
      * Ids de los proyectos supervisados por el docente (incluye eliminados, para consultar su historial).
      *
      * @return list<int>

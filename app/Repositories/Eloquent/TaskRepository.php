@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class TaskRepository implements TaskRepositoryInterface
@@ -98,6 +99,50 @@ class TaskRepository implements TaskRepositoryInterface
             ->whereIn('status', [TaskStatus::Pendiente, TaskStatus::EnProgreso])
             ->whereDate('due_date', '<', $today->toDateString())
             ->get();
+    }
+
+    public function deadlineStats(?User $assignee, ?array $projectIds, CarbonInterface $until): array
+    {
+        $open = [TaskStatus::Pendiente->value, TaskStatus::EnProgreso->value];
+
+        // Una sola consulta con agregados condicionales (DATE() es portable entre MySQL y SQLite).
+        $row = $this->scoped($assignee, $projectIds)
+            ->selectRaw('SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END) as pending', $open)
+            ->selectRaw('SUM(CASE WHEN status IN (?, ?) AND DATE(due_date) BETWEEN ? AND ? THEN 1 ELSE 0 END) as due_soon',
+                [...$open, now()->toDateString(), $until->toDateString()])
+            ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as overdue', [TaskStatus::Vencida->value])
+            ->toBase()
+            ->first();
+
+        return [
+            'pending' => (int) $row->pending,
+            'due_soon' => (int) $row->due_soon,
+            'overdue' => (int) $row->overdue,
+        ];
+    }
+
+    public function nextOpen(?User $assignee, ?array $projectIds, int $limit = 6): Collection
+    {
+        return $this->scoped($assignee, $projectIds)
+            ->with(['project:id,title', 'assignee:id,name'])
+            ->whereIn('status', TaskStatus::open())
+            ->orderBy('due_date')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Tareas de un responsable y/o de un conjunto de proyectos, excluyendo proyectos eliminados.
+     *
+     * @param  list<int>|null  $projectIds
+     * @return Builder<Task>
+     */
+    private function scoped(?User $assignee, ?array $projectIds): Builder
+    {
+        return Task::query()
+            ->whereHas('project')
+            ->when($assignee, fn (Builder $query) => $query->where('assigned_to', $assignee->id))
+            ->when($projectIds !== null, fn (Builder $query) => $query->whereIn('project_id', $projectIds));
     }
 
     public function dueSoonWithoutReminder(CarbonInterface $from, CarbonInterface $until): Collection
