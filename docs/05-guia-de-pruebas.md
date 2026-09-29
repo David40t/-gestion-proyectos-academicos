@@ -161,6 +161,17 @@ php artisan tasks:check-deadlines
 | D3 | Como líder, cambiar la fecha límite de esa tarea a mañana y volver a ejecutar | Se envía un nuevo recordatorio |
 | D4 | Tareas abiertas con fecha límite pasada | Pasan a **Vencida**. Responsable y líder reciben un correo |
 
+### 3.9 Auditoría
+| # | Usuario | Pasos | Resultado esperado |
+|---|---|---|---|
+| AU1 | docente | Menú → Auditoría | Solo aparecen los registros de sus proyectos, sin inicios de sesión |
+| AU2 | docente | Filtrar por Módulo = Tareas y un rango de fechas | Solo acciones de tareas en ese rango |
+| AU3 | docente | Abrir "Detalle" de una "Tarea modificada" | Tabla campo / valor anterior (rojo) / valor nuevo (verde), con usuario, IP y navegador |
+| AU4 | docente | En el proyecto, botón **Historial** | Auditoría filtrada por ese proyecto |
+| AU5 | lider / estudiante | Abrir `/audits` por URL | **403**: no hay enlace en el menú y el backend lo impide |
+| AU6 | docente | Enviar `DELETE /audits/1` (p. ej. con curl) | **405**: no existe ninguna ruta para modificar o borrar |
+| AU7 | cualquiera | Realizar una acción (p. ej. comentar) y revisar la auditoría | Registro con fecha, usuario, IP y valores, sin contraseñas ni tokens |
+
 ---
 
 ## 4. Pruebas automatizadas
@@ -173,7 +184,7 @@ php artisan test tests/Unit                    # solo unitarias
 - Usan **SQLite en memoria** (ADR-011): no tocan la base MySQL ni envían correos.
 - Estructura:
   - `tests/Unit`: reglas puras (`TaskStateResolver`, `AuditService` con repositorio simulado).
-  - `tests/Feature/{Auth,Authorization,Projects,Tasks,Comments,Notifications,Database}`: flujos HTTP completos.
+  - `tests/Feature/{Auth,Authorization,Projects,Tasks,Comments,Notifications,Audit,Database}`: flujos HTTP completos.
 
 ---
 

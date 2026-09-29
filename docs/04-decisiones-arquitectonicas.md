@@ -131,8 +131,12 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
   - Registrar de forma explícita (en lugar de *model observers* genéricos) guarda acciones con significado
     de negocio (`task.status_changed`, no solo "updated").
   - Hace el flujo visible en la presentación académica.
-- **Consecuencias:** cada Service debe acordarse de auditar. Los Feature Tests verifican que cada acción
-  crítica genere su registro.
+- **Consecuencias:**
+  - Cada Service debe acordarse de auditar; los Feature Tests verifican que cada acción crítica genere su registro.
+  - Escritura (`AuditService`) y consulta (`AuditQueryService`) están separadas (SRP).
+  - La inmutabilidad se garantiza en tres niveles: no hay rutas de edición ni borrado (405), `AuditPolicy`
+    niega `update`/`delete`, y el modelo `Audit` lanza una excepción si se intenta modificar.
+  - Mejora futura: un trigger de BD o un usuario de BD sin permisos UPDATE/DELETE sobre `audits`.
 
 ## ADR-010 · Frontend Blade + CSS/JS estáticos (sin Tailwind, sin Vite, sin Node.js)
 

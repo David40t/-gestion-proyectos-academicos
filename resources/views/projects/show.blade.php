@@ -9,6 +9,9 @@
             <x-status-badge :status="$project->status" />
         </div>
         <div class="actions">
+            @can('viewProjectHistory', [App\Models\Audit::class, $project])
+                <a href="{{ route('audits.index', ['project_id' => $project->id]) }}" class="btn btn-secondary">Historial</a>
+            @endcan
             @can('update', $project)
                 <a href="{{ route('projects.edit', $project) }}" class="btn btn-secondary">Editar</a>
             @endcan

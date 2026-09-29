@@ -163,12 +163,13 @@ la papelera del proyecto. Una tarea eliminada no cuenta en el seguimiento.
 | module | VARCHAR(30) | NOT NULL (`proyectos`, `tareas`, …) |
 | auditable_type | VARCHAR(255) | NULL, clase de la entidad afectada |
 | auditable_id | BIGINT UNSIGNED | NULL, id del registro afectado |
+| project_id | BIGINT UNSIGNED | NULL, **contexto**: proyecto al que pertenece la entidad (sin FK). Lo completa `AuditService` |
 | old_values | JSON | NULL, solo los campos que cambiaron |
 | new_values | JSON | NULL |
 | ip_address | VARCHAR(45) | NULL (IPv4/IPv6) |
 | user_agent | VARCHAR(255) | NULL |
 | created_at | TIMESTAMP | NOT NULL, INDEX, **sin `updated_at`: registro inmutable** |
-| | | INDEX (auditable_type, auditable_id), INDEX (module, action), INDEX (user_id) |
+| | | INDEX (auditable_type, auditable_id), INDEX (module, action), INDEX (user_id), INDEX (project_id, created_at) |
 
 ### Tablas de infraestructura de Laravel
 `password_reset_tokens`, `sessions`, `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`.
@@ -217,6 +218,9 @@ Son necesarias para recuperar contraseña, las sesiones y las colas de correos. 
   - Costo: existe una dependencia controlada (`task_id → project_id`), que valida el `CommentService` (ADR-007).
 - **Auditoría polimórfica** (`auditable_type/id` sin FK), a propósito: el registro debe sobrevivir aunque la
   entidad auditada se elimine.
+- **`audits.project_id` es un dato de contexto desnormalizado a propósito.** Se deriva de la entidad (tarea →
+  su proyecto), pero guardarlo evita joins polimórficos para consultar "todo lo ocurrido en un proyecto" y para
+  limitar al docente a sus proyectos. Como la auditoría es inmutable, este dato no puede desincronizarse.
 - **Soft delete en `projects`, `tasks` y `comments`** (ADR-013). Así se conserva el historial y la
   trazabilidad. No se aplica a `project_members` (rompería el UNIQUE al reincorporar a alguien; el historial
   queda en auditoría), a `audits` (inmutable) ni a `users` o `notifications` (el MVP no los elimina).

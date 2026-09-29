@@ -12,7 +12,7 @@ use LogicException;
  * Registro de auditoría. Inmutable: solo se crea, nunca se modifica ni elimina (ADR-009).
  */
 #[Fillable([
-    'user_id', 'action', 'module', 'auditable_type', 'auditable_id',
+    'user_id', 'action', 'module', 'auditable_type', 'auditable_id', 'project_id',
     'old_values', 'new_values', 'ip_address', 'user_agent',
 ])]
 class Audit extends Model
@@ -39,6 +39,16 @@ class Audit extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Proyecto de contexto (incluye proyectos eliminados lógicamente).
+     *
+     * @return BelongsTo<Project, $this>
+     */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class)->withTrashed();
     }
 
     /**

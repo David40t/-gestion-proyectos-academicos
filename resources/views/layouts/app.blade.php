@@ -41,6 +41,9 @@
                     Notificaciones @if ($unreadNotifications > 0)<span class="notification-count">{{ $unreadNotifications }}</span>@endif
                 </a>
             @endcan
+            @can('viewAny', App\Models\Audit::class)
+                <a href="{{ route('audits.index') }}" @class(['active' => request()->routeIs('audits.*')])>Auditoría</a>
+            @endcan
             {{-- Los enlaces de cada módulo se agregan en sus fases, protegidos con @can. --}}
         </nav>
 

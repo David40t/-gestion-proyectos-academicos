@@ -32,7 +32,8 @@ class RolePermissionSeeder extends Seeder
         'comentario.eliminar' => ['comentario', 'Eliminar (lógicamente) comentarios propios'],
         'notificacion.ver' => ['notificacion', 'Consultar notificaciones propias'],
         'notificacion.marcar_leida' => ['notificacion', 'Marcar notificaciones como leídas'],
-        'auditoria.ver' => ['auditoria', 'Consultar auditoría'],
+        'auditoria.ver' => ['auditoria', 'Consultar la auditoría de los proyectos supervisados'],
+        'auditoria.ver_todo' => ['auditoria', 'Consultar toda la auditoría del sistema (reservado)'],
         'rol.gestionar' => ['rol', 'Gestionar roles y permisos (reservado)'],
     ];
 

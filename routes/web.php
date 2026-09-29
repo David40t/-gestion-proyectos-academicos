@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MyTaskController;
@@ -51,4 +52,8 @@ Route::middleware('auth')->group(function () {
         ->middleware('can:notificacion.marcar_leida')->name('notifications.read-all');
     Route::patch('notifications/{notification}/read', [NotificationController::class, 'read'])
         ->middleware('can:notificacion.marcar_leida')->whereUuid('notification')->name('notifications.read');
+
+    // Auditoría (solo consulta)
+    Route::get('audits', [AuditController::class, 'index'])->name('audits.index');
+    Route::get('audits/{audit}', [AuditController::class, 'show'])->name('audits.show');
 });

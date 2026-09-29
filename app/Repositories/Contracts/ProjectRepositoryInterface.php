@@ -5,6 +5,7 @@ namespace App\Repositories\Contracts;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 interface ProjectRepositoryInterface
 {
@@ -30,6 +31,21 @@ interface ProjectRepositoryInterface
     public function delete(Project $project): void;
 
     public function countLedBy(User $user): int;
+
+    /**
+     * Ids de los proyectos supervisados por el docente (incluye eliminados, para consultar su historial).
+     *
+     * @return list<int>
+     */
+    public function idsSupervisedBy(User $user): array;
+
+    /**
+     * Proyectos (id, título) para listas de selección; null = todos. Incluye eliminados.
+     *
+     * @param  list<int>|null  $ids
+     * @return Collection<int, Project>
+     */
+    public function options(?array $ids): Collection;
 
     public function hasTasks(Project $project): bool;
 }

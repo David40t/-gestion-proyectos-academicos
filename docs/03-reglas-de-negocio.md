@@ -38,7 +38,8 @@ en los Controllers.**
 | comentario.eliminar | ✔ | ✔ | ✔ | Solo el autor; eliminación lógica |
 | notificacion.ver | ✔ | ✔ | ✔ | Solo las propias |
 | notificacion.marcar_leida | ✔ | ✔ | ✔ | Solo las propias |
-| auditoria.ver | | | ✔ | Docente: auditoría de sus proyectos supervisados |
+| auditoria.ver | | | ✔ | Solo la auditoría de sus proyectos supervisados |
+| auditoria.ver_todo | | | | Reservado: toda la auditoría (incluye autenticación y roles) |
 | rol.gestionar | | | | Reservado para un futuro rol administrador |
 
 **Roles acumulativos:** un usuario puede tener varios roles (`role_user` es N:M) y sus permisos se suman.
@@ -185,6 +186,10 @@ Canal **database** = notificación dentro del sistema. Canal **mail** = correo, 
   El modelo `Audit` lanza una excepción si se intenta actualizar o borrar un registro.
 - **Datos sensibles:** `AuditService` elimina `password`, `remember_token` y cualquier campo `*token*`
   antes de guardar. En los cambios se guardan solo los campos modificados (`getChanges()`).
+- **Consulta:** `/audits` con filtros por proyecto, módulo, acción, usuario y rango de fechas, más un detalle
+  con los valores anterior y nuevo de cada campo. El docente accede también desde el botón "Historial" del proyecto.
+- **Alcance:** con `auditoria.ver` solo se ven los registros con `project_id` de proyectos supervisados. Los
+  eventos de autenticación y roles (sin proyecto) solo los ve quien tenga `auditoria.ver_todo`.
 - **IP y user agent** se toman del request cuando existe. Las acciones del Scheduler quedan con `user_id` e IP en NULL.
 
 ## 9. Mapa de rutas (borrador)

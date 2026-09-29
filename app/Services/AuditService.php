@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use App\Models\Audit;
+use App\Models\Comment;
+use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use App\Repositories\Contracts\AuditRepositoryInterface;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
@@ -46,11 +49,24 @@ class AuditService
             'module' => $module,
             'auditable_type' => $auditable?->getMorphClass(),
             'auditable_id' => $auditable?->getKey(),
+            'project_id' => $this->projectContext($auditable),
             'old_values' => $this->sanitize($oldValues),
             'new_values' => $this->sanitize($newValues),
             'ip_address' => $this->request->ip(),
             'user_agent' => Str::limit((string) $this->request->userAgent(), 250, '') ?: null,
         ]);
+    }
+
+    /**
+     * Proyecto al que pertenece la entidad auditada (para consultar y limitar la auditoría por proyecto).
+     */
+    private function projectContext(?Model $auditable): ?int
+    {
+        return match (true) {
+            $auditable instanceof Project => $auditable->getKey(),
+            $auditable instanceof Task, $auditable instanceof Comment => $auditable->project_id,
+            default => null,
+        };
     }
 
     /**

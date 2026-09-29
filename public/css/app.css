@@ -233,3 +233,10 @@ h3 { font-size: 1rem; }
 .badge-category-tarea { background: #efe7fb; color: #6b3fa0; }
 .badge-category-comentario { background: #fff4de; color: #9a6700; }
 .badge-category-recordatorio { background: var(--color-error-bg); color: var(--color-error); }
+
+/* ---------- Auditoría ---------- */
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 1rem; align-items: end; }
+.filters-actions { display: flex; gap: .5rem; margin-bottom: 1rem; }
+.audit-old { color: var(--color-error); }
+.audit-new { color: var(--color-success); }
+code { font-size: .85rem; background: var(--color-bg); padding: .1rem .35rem; border-radius: 4px; }

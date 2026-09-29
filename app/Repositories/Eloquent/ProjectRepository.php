@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class ProjectRepository implements ProjectRepositoryInterface
 {
@@ -50,6 +51,19 @@ class ProjectRepository implements ProjectRepositoryInterface
     public function countLedBy(User $user): int
     {
         return Project::where('leader_id', $user->id)->count();
+    }
+
+    public function idsSupervisedBy(User $user): array
+    {
+        return Project::withTrashed()->where('teacher_id', $user->id)->pluck('id')->all();
+    }
+
+    public function options(?array $ids): Collection
+    {
+        return Project::withTrashed()
+            ->when($ids !== null, fn (Builder $query) => $query->whereKey($ids))
+            ->orderBy('title')
+            ->get(['id', 'title']);
     }
 
     public function hasTasks(Project $project): bool
