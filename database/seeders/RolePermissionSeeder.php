@@ -24,6 +24,7 @@ class RolePermissionSeeder extends Seeder
         'tarea.crear' => ['tarea', 'Crear tareas'],
         'tarea.editar' => ['tarea', 'Editar tareas'],
         'tarea.asignar' => ['tarea', 'Asignar responsables a tareas'],
+        'tarea.eliminar' => ['tarea', 'Eliminar (lógicamente) y restaurar tareas'],
         'tarea.cambiar_estado' => ['tarea', 'Cambiar estado y avance de tareas'],
         'comentario.ver' => ['comentario', 'Consultar comentarios'],
         'comentario.crear' => ['comentario', 'Crear comentarios'],
@@ -56,7 +57,7 @@ class RolePermissionSeeder extends Seeder
         ],
         Role::LIDER => [
             'proyecto.editar', 'proyecto.cambiar_estado', 'proyecto.eliminar', 'proyecto.gestionar_integrantes',
-            'tarea.crear', 'tarea.editar', 'tarea.asignar',
+            'tarea.crear', 'tarea.editar', 'tarea.asignar', 'tarea.eliminar',
         ],
         Role::DOCENTE => [
             'proyecto.ver', 'proyecto.cambiar_estado',

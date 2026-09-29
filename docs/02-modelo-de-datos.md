@@ -126,9 +126,11 @@ es el líder (ADR-006).
 | completed_at | TIMESTAMP | NULL |
 | due_reminder_sent_at | TIMESTAMP | NULL, evita recordatorios duplicados |
 | timestamps | | |
+| deleted_at | TIMESTAMP | NULL, **soft delete** (ADR-013) |
 | | | INDEX (project_id, status), INDEX (assigned_to, status) |
 
-Las tareas no usan soft delete: el MVP no contempla eliminarlas (no existe el permiso `tarea.eliminar`).
+Las tareas se eliminan de forma lógica (permiso `tarea.eliminar`, solo el líder) y pueden restaurarse desde
+la papelera del proyecto. Una tarea eliminada no cuenta en el seguimiento.
 
 ### comments
 | Columna | Tipo | Restricciones |
@@ -215,5 +217,6 @@ Son necesarias para recuperar contraseña, las sesiones y las colas de correos. 
   - Costo: existe una dependencia controlada (`task_id → project_id`), que valida el `CommentService` (ADR-007).
 - **Auditoría polimórfica** (`auditable_type/id` sin FK), a propósito: el registro debe sobrevivir aunque la
   entidad auditada se elimine.
-- **Soft delete solo en `projects`.** Un proyecto eliminado conserva sus tareas, comentarios y auditoría
-  para consultas históricas. En el resto de tablas no aporta valor en el MVP.
+- **Soft delete en `projects`, `tasks` y `comments`** (ADR-013). Así se conserva el historial y la
+  trazabilidad. No se aplica a `project_members` (rompería el UNIQUE al reincorporar a alguien; el historial
+  queda en auditoría), a `audits` (inmutable) ni a `users` o `notifications` (el MVP no los elimina).

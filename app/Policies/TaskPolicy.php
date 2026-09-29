@@ -46,6 +46,24 @@ class TaskPolicy
         return $user->hasPermission('tarea.asignar') && $this->isOpenAndLedBy($project, $user);
     }
 
+    public function delete(User $user, Task $task): bool
+    {
+        return $this->manageTrash($user, $task->project);
+    }
+
+    public function restore(User $user, Task $task): bool
+    {
+        return $this->manageTrash($user, $task->project);
+    }
+
+    /**
+     * Ver la papelera del proyecto, eliminar y restaurar tareas.
+     */
+    public function manageTrash(User $user, Project $project): bool
+    {
+        return $user->hasPermission('tarea.eliminar') && $this->isOpenAndLedBy($project, $user);
+    }
+
     /**
      * El responsable actualiza el avance de su tarea; el líder, el de cualquiera del proyecto.
      */

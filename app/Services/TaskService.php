@@ -34,6 +34,14 @@ class TaskService
     }
 
     /**
+     * @return Collection<int, Task>
+     */
+    public function trashedForProject(Project $project): Collection
+    {
+        return $this->tasks->trashedForProject($project);
+    }
+
+    /**
      * @return LengthAwarePaginator<int, Task>
      */
     public function assignedTo(User $user): LengthAwarePaginator
@@ -86,6 +94,34 @@ class TaskService
     public function updateProgress(Task $task, TaskStatus $status, int $progress, User $actor): Task
     {
         return $this->persistChanges($task, $this->resolveState($status, $progress, $task->due_date), $actor);
+    }
+
+    /**
+     * Eliminación lógica: la tarea deja de contar en el seguimiento, pero conserva su historial.
+     */
+    public function delete(Task $task, User $actor): void
+    {
+        DB::transaction(function () use ($task, $actor) {
+            $this->tasks->delete($task);
+            $this->audit->record('task.deleted', 'tareas', $task, ['title' => $task->title, 'status' => $task->status->value], [], $actor);
+        });
+    }
+
+    /**
+     * Restaura la tarea y recalcula su estado (p. ej. pudo vencer mientras estaba eliminada).
+     */
+    public function restore(Task $task, User $actor): Task
+    {
+        return DB::transaction(function () use ($task, $actor) {
+            $this->tasks->restore($task);
+            $this->audit->record('task.restored', 'tareas', $task, [], ['title' => $task->title], $actor);
+
+            $requested = $task->status === TaskStatus::Vencida
+                ? ($task->progress > 0 ? TaskStatus::EnProgreso : TaskStatus::Pendiente)
+                : $task->status;
+
+            return $this->persistChanges($task, $this->resolveState($requested, $task->progress, $task->due_date), $actor);
+        });
     }
 
     /**

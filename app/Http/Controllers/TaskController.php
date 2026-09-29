@@ -79,6 +79,24 @@ class TaskController extends Controller
         return redirect()->route('projects.tasks.show', [$project, $task])->with('success', 'Tarea actualizada.');
     }
 
+    public function destroy(Request $request, Project $project, Task $task): RedirectResponse
+    {
+        $this->authorize('delete', $task);
+
+        $this->tasks->delete($task, $request->user());
+
+        return redirect()->to(route('projects.show', $project).'#tareas')->with('success', "Tarea \"{$task->title}\" eliminada. Puedes restaurarla desde la papelera.");
+    }
+
+    public function restore(Request $request, Project $project, Task $task): RedirectResponse
+    {
+        $this->authorize('restore', $task);
+
+        $this->tasks->restore($task, $request->user());
+
+        return redirect()->route('projects.tasks.show', [$project, $task])->with('success', 'Tarea restaurada.');
+    }
+
     /**
      * @return array<string, mixed>
      */

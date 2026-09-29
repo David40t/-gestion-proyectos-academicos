@@ -11,11 +11,19 @@
             <x-status-badge :status="$task->status" />
             <span class="badge badge-priority-{{ $task->priority->value }}">Prioridad {{ $task->priority->label() }}</span>
         </div>
-        @can('update', $task)
-            <div class="actions">
+        <div class="actions">
+            @can('update', $task)
                 <a href="{{ route('projects.tasks.edit', [$project, $task]) }}" class="btn btn-secondary">Editar</a>
-            </div>
-        @endcan
+            @endcan
+            @can('delete', $task)
+                <form method="POST" action="{{ route('projects.tasks.destroy', [$project, $task]) }}"
+                      data-confirm="¿Eliminar esta tarea? Podrás restaurarla desde la papelera del proyecto.">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            @endcan
+        </div>
     </div>
 
     <div class="grid-main">

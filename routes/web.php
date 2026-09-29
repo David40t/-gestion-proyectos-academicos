@@ -31,8 +31,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('projects/{project}/members/{member}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
     Route::patch('projects/{project}/leader', [ProjectMemberController::class, 'updateLeader'])->name('projects.leader.update');
 
-    // Tareas (scoped: una tarea solo se resuelve dentro de su propio proyecto; las tareas no se eliminan en el MVP)
-    Route::resource('projects.tasks', TaskController::class)->except('destroy')->scoped();
+    // Tareas (scoped: una tarea solo se resuelve dentro de su propio proyecto; destroy = eliminación lógica)
+    Route::resource('projects.tasks', TaskController::class)->scoped();
+    Route::patch('projects/{project}/tasks/{task}/restore', [TaskController::class, 'restore'])
+        ->withTrashed()->scopeBindings()->name('projects.tasks.restore');
     Route::patch('projects/{project}/tasks/{task}/progress', [TaskProgressController::class, 'update'])
         ->scopeBindings()->name('projects.tasks.progress.update');
     Route::get('my-tasks', MyTaskController::class)->name('tasks.mine');

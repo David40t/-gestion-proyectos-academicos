@@ -65,6 +65,7 @@ class ProjectController extends Controller
             'summary' => $this->progress->summary($project),
             'tasks' => $this->tasks->forProject($project),
             'canCreateTasks' => $user->can('create', [Task::class, $project]),
+            'trashedTasks' => $user->can('manageTrash', [Task::class, $project]) ? $this->tasks->trashedForProject($project) : collect(),
             'nextStatuses' => collect($project->status->allowedTransitions())
                 ->filter(fn ($status) => $user->can('changeStatus', [$project, $status])),
         ]);

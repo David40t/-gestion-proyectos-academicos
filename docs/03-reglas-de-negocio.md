@@ -31,6 +31,7 @@ en los Controllers.**
 | tarea.editar | | ✔ | | Líder del proyecto |
 | tarea.asignar | | ✔ | | Líder; el responsable debe ser integrante |
 | tarea.cambiar_estado | ✔ | ✔ | | Responsable de la tarea, o líder del proyecto |
+| tarea.eliminar | | ✔ | | Líder; proyecto no cerrado. Eliminación lógica y restauración |
 | comentario.ver | ✔ | ✔ | ✔ | Acceso al proyecto |
 | comentario.crear | ✔ | ✔ | ✔ | Acceso al proyecto; `is_observation` solo el docente |
 | comentario.editar | ✔ | ✔ | ✔ | Solo el autor del comentario |
@@ -113,6 +114,10 @@ un solo archivo.
   pruebas unitarias). `TaskService` la aplica en toda creación, edición o registro de avance. Así la
   coherencia no depende del formulario ni del JavaScript.
 - Al crear una tarea, la fecha límite no puede ser anterior a hoy. El responsable debe ser integrante del proyecto.
+- **Eliminación lógica:** el líder elimina tareas (soft delete) y puede restaurarlas desde la papelera del
+  proyecto. Al restaurar, el estado se recalcula: si la fecha límite pasó mientras estaba eliminada, queda vencida.
+  Las tareas eliminadas no cuentan en el avance ni en los conteos. Ambas acciones se auditan
+  (`task.deleted`, `task.restored`).
 - El **estudiante responsable** solo puede cambiar `status` y `progress` de su tarea. El resto de campos
   los edita el líder.
 
@@ -161,7 +166,7 @@ Canal **database** = notificación dentro del sistema. Canal **mail** = correo, 
 | auth | `auth.login`, `auth.logout`, `auth.registered`, `auth.password_reset` |
 | proyectos | `project.created`, `project.updated`, `project.status_changed`, `project.deleted`, `project.leader_changed` |
 | integrantes | `member.added`, `member.removed` |
-| tareas | `task.created`, `task.updated`, `task.assigned`, `task.status_changed`, `task.marked_overdue` |
+| tareas | `task.created`, `task.updated`, `task.assigned`, `task.status_changed`, `task.marked_overdue`, `task.deleted`, `task.restored` |
 | comentarios | `comment.created`, `comment.updated` |
 | roles | `role.assigned`, `role.revoked`, `permission.changed` |
 
@@ -180,7 +185,8 @@ Canal **database** = notificación dentro del sistema. Canal **mail** = correo, 
 | PATCH | /projects/{project}/status | ProjectStatusController | auth |
 | POST / DELETE | /projects/{project}/members[/{user}] | ProjectMemberController | auth |
 | PATCH | /projects/{project}/leader | ProjectMemberController@updateLeader | auth |
-| resource (anidado, *scoped*, sin destroy) | /projects/{project}/tasks | TaskController | auth |
+| resource (anidado, *scoped*) | /projects/{project}/tasks | TaskController (destroy = soft delete) | auth |
+| PATCH | /projects/{project}/tasks/{task}/restore | TaskController@restore (`withTrashed`) | auth |
 | PATCH | /projects/{project}/tasks/{task}/progress | TaskProgressController | auth |
 | GET | /my-tasks | MyTaskController | auth |
 | POST / PATCH | /projects/{project}/comments[/{comment}] | CommentController | auth |

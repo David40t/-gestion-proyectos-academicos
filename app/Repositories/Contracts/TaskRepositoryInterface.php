@@ -21,10 +21,21 @@ interface TaskRepositoryInterface
      */
     public function update(Task $task, array $attributes): Task;
 
+    public function delete(Task $task): void;
+
+    public function restore(Task $task): void;
+
     /**
      * @return Collection<int, Task>
      */
     public function forProject(Project $project): Collection;
+
+    /**
+     * Tareas eliminadas lógicamente del proyecto (papelera).
+     *
+     * @return Collection<int, Task>
+     */
+    public function trashedForProject(Project $project): Collection;
 
     /**
      * @return LengthAwarePaginator<int, Task>

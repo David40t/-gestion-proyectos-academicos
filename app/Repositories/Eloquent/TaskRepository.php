@@ -25,6 +25,21 @@ class TaskRepository implements TaskRepositoryInterface
         return $task;
     }
 
+    public function delete(Task $task): void
+    {
+        $task->delete();
+    }
+
+    public function restore(Task $task): void
+    {
+        $task->restore();
+    }
+
+    public function trashedForProject(Project $project): Collection
+    {
+        return $project->tasks()->onlyTrashed()->latest('deleted_at')->get();
+    }
+
     public function forProject(Project $project): Collection
     {
         return $project->tasks()

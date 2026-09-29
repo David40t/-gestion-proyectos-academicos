@@ -147,3 +147,20 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
   `laravel/boost` (una herramienta para asistentes de IA).
 - **Decisión:** no instalarlo.
 - **Justificación:** no forma parte de la solución ni del stack exigido.
+
+## ADR-013 · Eliminación lógica (soft delete) donde hay historial que conservar
+
+- **Contexto:** eliminar físicamente proyectos, tareas o comentarios haría perder historial académico y
+  dejaría registros de auditoría apuntando a entidades inexistentes.
+- **Decisión:** usar `SoftDeletes` de Eloquent en `projects`, `tasks` y `comments`. Las tareas se pueden
+  restaurar desde la papelera del proyecto (permiso `tarea.eliminar`, solo el líder).
+- **Descartado:**
+  - `project_members`: rompería el UNIQUE `(project_id, user_id)` al reincorporar a un integrante, y el
+    historial de altas y bajas ya queda en auditoría.
+  - `audits`: es inmutable.
+  - `users` y `notifications`: el MVP no contempla eliminarlos.
+- **Consecuencias:**
+  - El *scope* global de Eloquent excluye automáticamente los registros eliminados en consultas, conteos,
+    promedios y route binding. Solo la ruta de restauración usa `withTrashed()`.
+  - Las claves foráneas `ON DELETE CASCADE` solo actúan ante un borrado físico, que la aplicación no realiza.
+

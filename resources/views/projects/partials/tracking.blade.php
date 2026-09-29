@@ -54,4 +54,22 @@
             </table>
         </div>
     @endif
+
+    @if ($trashedTasks->isNotEmpty())
+        <details class="trash">
+            <summary>Papelera ({{ $trashedTasks->count() }})</summary>
+            <ul>
+                @foreach ($trashedTasks as $task)
+                    <li>
+                        <span>{{ $task->title }} <span class="muted small">· eliminada {{ $task->deleted_at->diffForHumans() }}</span></span>
+                        <form method="POST" action="{{ route('projects.tasks.restore', [$project, $task]) }}">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="btn btn-link">Restaurar</button>
+                        </form>
+                    </li>
+                @endforeach
+            </ul>
+        </details>
+    @endif
 </section>
