@@ -1,0 +1,146 @@
+# 04 · Decisiones arquitectónicas (ADR)
+
+Cada decisión sigue el formato **Contexto → Decisión → Justificación → Consecuencias**.
+
+---
+
+## ADR-001 · Monolito modular con Laravel 13 y MySQL 8 (compatible con MariaDB)
+
+- **Contexto:** es un sistema académico con un solo equipo de desarrollo, carga moderada y un plazo de
+  un semestre. El enunciado exige MariaDB, pero el entorno de desarrollo disponible tiene MySQL 8 instalado
+  y en ejecución.
+- **Decisión:** un único proyecto Laravel 13 (PHP 8.5) organizado por módulos. En desarrollo se usa MySQL 8.
+  Las migraciones usan solo tipos estándar (sin características exclusivas de MySQL), así que el mismo
+  esquema funciona en MariaDB cambiando `DB_CONNECTION=mariadb` en `.env`.
+- **Justificación:**
+  - Un monolito evita la complejidad operativa de los microservicios (red, despliegues múltiples,
+    consistencia distribuida), que no aporta valor a esta escala.
+  - La modularidad interna conserva la mantenibilidad.
+- **Consecuencias:** hay un solo despliegue y una sola base de datos. Si en el futuro un módulo necesita
+  escalar por separado, sus fronteras ya están definidas.
+
+## ADR-002 · Arquitectura en capas con Service Layer y Repository Pattern
+
+- **Contexto:** hay reglas de negocio que involucran varias entidades (crear proyecto + líder + integrantes +
+  auditoría) y deben poder probarse y explicarse.
+- **Decisión:** el flujo es Controller → Service → Repository → Model. Los Repositories exponen interfaces
+  (`Repositories/Contracts`) enlazadas en `RepositoryServiceProvider`.
+- **Justificación:**
+  - **SRP:** cada capa tiene un solo motivo de cambio.
+  - **DIP:** los Services dependen de interfaces, no de Eloquent.
+  - Permite probar Services de forma unitaria con repositorios simulados.
+- **Consecuencias:** hay más archivos que en un Laravel "clásico". Para no crear capas vacías, los
+  Repositories solo exponen los métodos que los Services realmente usan (sin un CRUD genérico gigante).
+
+## ADR-003 · Autenticación con Laravel Fortify y vistas Blade propias
+
+- **Contexto:** se pide autenticación nativa de Laravel sin frameworks de frontend. Los starter kits de
+  Laravel 13 usan Livewire, React o Vue, y Breeze fue descontinuado.
+- **Decisión:** usar **Laravel Fortify**, el backend oficial de autenticación y sin interfaz. Las vistas de
+  login, registro y recuperación de contraseña se escriben en Blade.
+- **Justificación:** no se reinventa la autenticación (hashing, throttling, tokens de recuperación, regeneración
+  de sesión) y se respeta la restricción de frontend.
+- **Consecuencias:** la creación de usuarios se personaliza en `App\Actions\Fortify\CreateNewUser`, que asigna
+  el rol `ESTUDIANTE`.
+
+## ADR-004 · Roles y permisos propios con Gate + Policies
+
+- **Contexto:** el enunciado define las tablas `roles`, `permissions`, `role_user` y `permission_role`, y exige
+  poder agregar roles sin tocar la lógica central.
+- **Decisión:**
+  - Implementación propia de roles y permisos, sin paquetes de terceros como spatie/laravel-permission.
+  - Un `Gate::before` resuelve cualquier habilidad con formato `modulo.accion` contra los permisos del usuario.
+  - Las Policies añaden las reglas por registro.
+- **Justificación:**
+  - El esquema coincide exactamente con el pedido.
+  - Es fácil de explicar.
+  - Evita una dependencia externa cuyo esquema (`model_has_roles`, …) difiere del requerido.
+- **Consecuencias:** los permisos del usuario se cargan una vez por request (memorización en el modelo `User`)
+  para no repetir consultas.
+
+### ADR-004b · Estados y prioridades como Enums de PHP
+- **Decisión:** usar `ProjectStatus`, `TaskStatus` y `TaskPriority` como *backed enums*, guardados en BD como
+  VARCHAR. Cada Enum incluye su etiqueta visible y sus transiciones permitidas.
+- **Justificación:**
+  - Hay un solo punto de cambio y tipado fuerte en PHP.
+  - No se usa el tipo ENUM de SQL, que obliga a una migración por cada cambio.
+  - Tampoco se usan tablas catálogo, que agregarían *joins* y pantallas de administración innecesarias en el MVP.
+- **Consecuencias:** agregar un estado implica editar el Enum (y su vista). No hace falta migración.
+
+## ADR-005 · El avance del proyecto se calcula, no se almacena
+
+- **Decisión:** `ProgressService` calcula el avance del proyecto con `AVG(tasks.progress)`. `projects` no tiene
+  columna `progress`.
+- **Justificación:** evita datos derivados que pueden desincronizarse (normalización). El cálculo es una sola
+  consulta indexada por `project_id`.
+- **Consecuencias:** los listados de proyectos usan `withAvg('tasks', 'progress')` en el Repository para evitar
+  el problema N+1.
+
+## ADR-006 · El liderazgo es por proyecto; el rol LIDER otorga capacidades
+
+- **Contexto:** un estudiante puede liderar un proyecto y ser integrante normal en otro.
+- **Decisión:**
+  - `projects.leader_id` define el líder de cada proyecto.
+  - El rol global `LIDER` da los *permisos* de gestión, y la Policy exige además ser el líder de *ese* proyecto.
+  - `RoleService` asigna o retira el rol `LIDER` automáticamente y lo audita.
+- **Justificación:** se respetan los tres roles del enunciado y el modelo de permisos por rol, sin dar
+  privilegios sobre proyectos ajenos.
+- **Consecuencias:** `leader_id` y la membresía se mantienen coherentes en `ProjectMemberService`, dentro de
+  una transacción.
+
+## ADR-007 · Comentarios con `project_id` + `task_id` opcional
+
+- **Decisión:** se usan claves foráneas reales en lugar de una relación polimórfica (`commentable`).
+- **Justificación:** hay integridad referencial y la autorización es directa, porque todo comentario pertenece
+  a un proyecto.
+- **Consecuencias:** `CommentService` valida que `task_id` pertenezca al `project_id` indicado.
+
+## ADR-008 · Notificaciones nativas de Laravel, en cola, despachadas desde los Services
+
+- **Decisión:**
+  - Una clase `Notification` por evento, con canales `database` y `mail`.
+  - Las notificaciones implementan `ShouldQueue` y usan el driver de cola `database` (sin Redis).
+  - Se envían **después del commit** (`afterCommit`).
+  - Los recordatorios de fecha límite los genera un comando programado diario (`tasks:check-deadlines`).
+- **Justificación:**
+  - Desacoplamiento: agregar un canal solo toca `via()`.
+  - Los correos no bloquean la respuesta HTTP.
+  - No se notifica algo que se revirtió.
+- **Consecuencias:** en producción hay que ejecutar `php artisan queue:work` y el cron de `schedule:run`.
+  En desarrollo, el correo usa el driver `log`.
+
+## ADR-009 · Auditoría propia, explícita e inmutable
+
+- **Decisión:**
+  - Un `AuditService::record()` invocado explícitamente por los Services **dentro de la misma transacción**
+    que el cambio.
+  - Login y logout se auditan con Listeners de los eventos nativos de Auth.
+  - Sin paquetes externos.
+- **Justificación:**
+  - Registrar de forma explícita (en lugar de *model observers* genéricos) guarda acciones con significado
+    de negocio (`task.status_changed`, no solo "updated").
+  - Hace el flujo visible en la presentación académica.
+- **Consecuencias:** cada Service debe acordarse de auditar. Los Feature Tests verifican que cada acción
+  crítica genere su registro.
+
+## ADR-010 · Frontend Blade + CSS/JS propios (sin Tailwind)
+
+- **Decisión:** usar Blade con componentes (`<x-alert>`, `<x-card>`), CSS propio y JavaScript *vanilla*,
+  empaquetados con Vite (incluido en Laravel). Se retira Tailwind del esqueleto.
+- **Justificación:** el enunciado limita el frontend a Blade, HTML, CSS y JS, sin tecnologías adicionales.
+- **Consecuencias:** hay que escribir y mantener una hoja de estilos propia, pequeña.
+
+## ADR-011 · Pruebas con SQLite en memoria
+
+- **Decisión:** PHPUnit con `RefreshDatabase` sobre SQLite en memoria (la configuración por defecto de
+  Laravel en `phpunit.xml`).
+- **Justificación:** las pruebas son rápidas y aisladas, y no dependen del servidor MySQL.
+- **Consecuencias:** las migraciones deben ser portables (sin SQL crudo específico de un motor), lo que
+  además refuerza la compatibilidad con MariaDB del ADR-001.
+
+## ADR-012 · No instalar Laravel Boost
+
+- **Contexto:** el esqueleto de Laravel 13 incluye `CLAUDE.md`/`AGENTS.md`, que sugieren instalar
+  `laravel/boost` (una herramienta para asistentes de IA).
+- **Decisión:** no instalarlo.
+- **Justificación:** no forma parte de la solución ni del stack exigido.
