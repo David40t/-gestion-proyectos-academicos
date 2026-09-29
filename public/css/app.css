@@ -221,3 +221,15 @@ h3 { font-size: 1rem; }
 .comment-actions summary { cursor: pointer; list-style: none; color: var(--color-primary); }
 .comment-actions textarea { width: 100%; min-width: 260px; margin: .5rem 0; padding: .5rem; font: inherit; border: 1px solid var(--color-border); border-radius: var(--radius); }
 .badge-observation { background: #fff4de; color: #9a6700; }
+
+/* ---------- Notificaciones ---------- */
+.navbar-notifications { color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: .35rem; }
+.notification-count { display: inline-block; min-width: 1.4rem; padding: 0 .4rem; border-radius: 999px; background: var(--color-error); color: #fff; font-size: .75rem; font-weight: 700; text-align: center; }
+.notification { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: .9rem; border-bottom: 1px solid var(--color-border); }
+.notification form { margin: 0; }
+.notification-unread { background: #f3f7ff; border-left: 4px solid var(--color-primary); }
+.notification-message { margin: .35rem 0; }
+.badge-category-proyecto { background: #e3edfb; color: var(--color-primary); }
+.badge-category-tarea { background: #efe7fb; color: #6b3fa0; }
+.badge-category-comentario { background: #fff4de; color: #9a6700; }
+.badge-category-recordatorio { background: var(--color-error-bg); color: var(--color-error); }

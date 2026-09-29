@@ -3,6 +3,7 @@
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MyTaskController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectStatusController;
@@ -42,4 +43,12 @@ Route::middleware('auth')->group(function () {
 
     // Comentarios (del proyecto o de una de sus tareas; scoped: el comentario debe pertenecer al proyecto)
     Route::resource('projects.comments', CommentController::class)->only(['store', 'update', 'destroy'])->scoped();
+
+    // Notificaciones internas (solo las propias; permisos verificados por el Gate de permisos)
+    Route::get('notifications', [NotificationController::class, 'index'])
+        ->middleware('can:notificacion.ver')->name('notifications.index');
+    Route::patch('notifications/read-all', [NotificationController::class, 'readAll'])
+        ->middleware('can:notificacion.marcar_leida')->name('notifications.read-all');
+    Route::patch('notifications/{notification}/read', [NotificationController::class, 'read'])
+        ->middleware('can:notificacion.marcar_leida')->whereUuid('notification')->name('notifications.read');
 });

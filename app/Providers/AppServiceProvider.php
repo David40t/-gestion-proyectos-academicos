@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\View\Composers\NavigationComposer;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Marcado HTML simple para la paginación; los estilos están en public/css/app.css.
         Paginator::useBootstrapFive();
+
+        View::composer(['layouts.app', 'notifications.index'], NavigationComposer::class);
     }
 
     /**

@@ -16,6 +16,10 @@ class DatabaseSeeder extends Seeder
 
         // Datos de demostración: nunca en producción.
         if (app()->environment(['local', 'testing'])) {
+            // Los datos demo se crean con los Services, que generan notificaciones.
+            // Se guardan de inmediato en BD (cola síncrona) y sus correos van al log: sembrar nunca envía correos reales.
+            config(['queue.default' => 'sync', 'mail.default' => 'log']);
+
             $this->call([DemoUserSeeder::class, DemoProjectSeeder::class, DemoTaskSeeder::class, DemoCommentSeeder::class]);
         }
     }

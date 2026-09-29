@@ -115,4 +115,20 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Destinatario global (solo desarrollo)
+    |--------------------------------------------------------------------------
+    |
+    | Si se define MAIL_TO_ADDRESS, TODOS los correos se envían a esa dirección
+    | en lugar de a sus destinatarios reales. Evita enviar correos a los usuarios
+    | de demostración (@demo.test). Dejar vacío en producción.
+    |
+    */
+
+    'to' => [
+        'address' => env('MAIL_TO_ADDRESS') ?: null, // vacío = sin redirección
+        'name' => env('MAIL_TO_NAME', 'Buzón de desarrollo'),
+    ],
+
 ];

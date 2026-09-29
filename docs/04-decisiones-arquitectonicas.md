@@ -98,16 +98,27 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
 ## ADR-008 · Notificaciones nativas de Laravel, en cola, despachadas desde los Services
 
 - **Decisión:**
-  - Una clase `Notification` por evento, con canales `database` y `mail`.
-  - Las notificaciones implementan `ShouldQueue` y usan el driver de cola `database` (sin Redis).
-  - Se envían **después del commit** (`afterCommit`).
-  - Los recordatorios de fecha límite los genera un comando programado diario (`tasks:check-deadlines`).
+  - Una clase por evento en `app/Notifications/{Project,Task,Comment}`, todas heredan de `AppNotification`.
+  - Canal `database` siempre. Canal `mail` solo cuando la notificación decide que el evento es crítico
+    (`shouldMail()`, que puede decidir por destinatario).
+  - Las notificaciones implementan `ShouldQueue` (cola `database`, sin Redis), usan `afterCommit()` y se
+    reintentan hasta 3 veces con espera progresiva.
+  - `NotificationDispatcher` es el punto único de envío: resuelve destinatarios, quita duplicados y nunca
+    notifica al autor de la acción.
+  - Los procesos de fechas límite viven en `TaskDeadlineService`, ejecutado a diario por `tasks:check-deadlines`.
 - **Justificación:**
-  - Desacoplamiento: agregar un canal solo toca `via()`.
+  - Desacoplamiento: agregar un canal solo toca `via()`, y la regla "¿merece correo?" vive junto a la
+    notificación, no dispersa en los Services.
   - Los correos no bloquean la respuesta HTTP.
-  - No se notifica algo que se revirtió.
-- **Consecuencias:** en producción hay que ejecutar `php artisan queue:work` y el cron de `schedule:run`.
-  En desarrollo, el correo usa el driver `log`.
+  - `afterCommit` garantiza que nunca se notifique algo que se revirtió, aunque el despacho ocurra dentro de
+    la transacción (p. ej. integrantes agregados al crear un proyecto).
+  - Las notificaciones guardan solo texto y URL calculados al crearlas: el job no depende de que los modelos
+    sigan existiendo (p. ej. una tarea eliminada después).
+- **Consecuencias:**
+  - Hay que ejecutar un worker (`php artisan queue:work`) y el cron de `schedule:run`.
+  - Laravel encola un job por canal, así que un fallo de correo no impide la notificación interna.
+  - En desarrollo, `MAIL_TO_ADDRESS` redirige todos los correos a un único buzón.
+  - Los seeders usan cola síncrona y correo en log: sembrar datos nunca envía correos reales.
 
 ## ADR-009 · Auditoría propia, explícita e inmutable
 

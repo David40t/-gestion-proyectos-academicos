@@ -83,7 +83,7 @@ Blade nunca ejecuta consultas.
 | 6 | Tareas | `TaskController`, `TaskProgressController`, `MyTaskController` | `TaskService`, `Tasks\TaskStateResolver` | `TaskRepository` | `TaskPolicy`, `TaskStatus`, `TaskPriority` |
 | 7 | Seguimiento | `ProjectController@show`, `DashboardController` | `ProgressService`, `DashboardService` | `TaskRepository` (agregados) | Comando `tasks:check-deadlines` (diario, `routes/console.php`) |
 | 8 | Comentarios | `CommentController` | `CommentService` | `CommentRepository` | `CommentPolicy` |
-| 9 | Notificaciones | `NotificationController` | (Laravel Notifications) | — | Clases en `app/Notifications` |
+| 9 | Notificaciones | `NotificationController` | `Notifications\NotificationDispatcher`, `Notifications\NotificationService`, `TaskDeadlineService` | `NotificationRepository` | `AppNotification` y clases en `app/Notifications`, `NavigationComposer` |
 | 10 | Auditoría | `AuditController` | `AuditService` | `AuditRepository` | `AuditPolicy`, Listeners |
 
 \* Solo si se requiere lógica de usuarios más allá del registro de Fortify (p. ej. listar docentes para un select).

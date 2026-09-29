@@ -10,6 +10,14 @@
     <header class="navbar">
         <a href="{{ route('dashboard') }}" class="navbar-brand">Proyectos Académicos</a>
         <div class="navbar-user">
+            @can('notificacion.ver')
+                <a href="{{ route('notifications.index') }}" class="navbar-notifications" title="Notificaciones">
+                    Notificaciones
+                    @if ($unreadNotifications > 0)
+                        <span class="notification-count">{{ $unreadNotifications > 99 ? '99+' : $unreadNotifications }}</span>
+                    @endif
+                </a>
+            @endcan
             <span>{{ auth()->user()->name }}</span>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
@@ -27,6 +35,11 @@
             @can('tarea.cambiar_estado')
                 {{-- Solo quienes pueden ser responsables de tareas (estudiantes). --}}
                 <a href="{{ route('tasks.mine') }}" @class(['active' => request()->routeIs('tasks.mine')])>Mis tareas</a>
+            @endcan
+            @can('notificacion.ver')
+                <a href="{{ route('notifications.index') }}" @class(['active' => request()->routeIs('notifications.*')])>
+                    Notificaciones @if ($unreadNotifications > 0)<span class="notification-count">{{ $unreadNotifications }}</span>@endif
+                </a>
             @endcan
             {{-- Los enlaces de cada módulo se agregan en sus fases, protegidos con @can. --}}
         </nav>

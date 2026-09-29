@@ -26,6 +26,6 @@ class ProjectMemberRepository implements ProjectMemberRepositoryInterface
 
     public function membersOf(Project $project): Collection
     {
-        return $project->members()->orderBy('name')->get(['users.id', 'users.name']);
+        return $project->members()->orderBy('name')->get(['users.id', 'users.name', 'users.email']);
     }
 }

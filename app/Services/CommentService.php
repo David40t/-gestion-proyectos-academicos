@@ -7,8 +7,10 @@ use App\Models\Comment;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\Comment\CommentPosted;
 use App\Repositories\Contracts\CommentRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
+use App\Services\Notifications\NotificationDispatcher;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -21,6 +23,7 @@ class CommentService
         private readonly CommentRepositoryInterface $comments,
         private readonly TaskRepositoryInterface $tasks,
         private readonly AuditService $audit,
+        private readonly NotificationDispatcher $notifier,
     ) {}
 
     /**
@@ -67,6 +70,8 @@ class CommentService
                 'body' => $comment->body,
             ], $author);
 
+            $this->notifyComment($project, $comment, $author);
+
             return $comment;
         });
     }
@@ -92,6 +97,20 @@ class CommentService
             $this->comments->delete($comment);
             $this->audit->record('comment.deleted', 'comentarios', $comment, ['body' => $comment->body], [], $actor);
         });
+    }
+
+    /**
+     * Comentario del docente → todos los integrantes. Comentario de un estudiante → líder y docente.
+     */
+    private function notifyComment(Project $project, Comment $comment, User $author): void
+    {
+        $notification = new CommentPosted($comment, $project);
+
+        if ($project->isSupervisedBy($author)) {
+            $this->notifier->toProject($project, $notification, $author, includeTeacher: false);
+        } else {
+            $this->notifier->send([$project->leader, $project->teacher], $notification, $author);
+        }
     }
 
     /**

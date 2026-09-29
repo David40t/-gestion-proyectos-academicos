@@ -6,7 +6,11 @@ use App\Enums\TaskStatus;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\Task\TaskAssigned;
+use App\Notifications\Task\TaskCompleted;
+use App\Notifications\Task\TaskUpdated;
 use App\Repositories\Contracts\TaskRepositoryInterface;
+use App\Services\Notifications\NotificationDispatcher;
 use App\Services\Tasks\TaskStateResolver;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
@@ -23,6 +27,7 @@ class TaskService
         private readonly TaskRepositoryInterface $tasks,
         private readonly TaskStateResolver $stateResolver,
         private readonly AuditService $audit,
+        private readonly NotificationDispatcher $notifier,
     ) {}
 
     /**
@@ -66,6 +71,7 @@ class TaskService
 
             if ($task->assigned_to) {
                 $this->audit->record('task.assigned', 'tareas', $task, [], ['assigned_to' => $task->assigned_to], $actor);
+                $this->notifier->send($task->assignee, new TaskAssigned($task, $actor), $actor);
             }
 
             return $task;
@@ -84,6 +90,11 @@ class TaskService
             (int) $data['progress'],
             $data['due_date'],
         );
+
+        // Si cambia la fecha límite, el recordatorio de "próxima a vencer" debe poder enviarse de nuevo.
+        if (! $task->due_date->isSameDay(Carbon::parse($data['due_date']))) {
+            $data['due_reminder_sent_at'] = null;
+        }
 
         return $this->persistChanges($task, [...$data, ...$state], $actor);
     }
@@ -122,26 +133,6 @@ class TaskService
 
             return $this->persistChanges($task, $this->resolveState($requested, $task->progress, $task->due_date), $actor);
         });
-    }
-
-    /**
-     * Marca como vencidas las tareas abiertas cuya fecha límite pasó. Lo ejecuta el Scheduler.
-     *
-     * @return Collection<int, Task> Tareas marcadas en esta ejecución.
-     */
-    public function markOverdueTasks(): Collection
-    {
-        $tasks = $this->tasks->pastDueOpen(Carbon::today());
-
-        foreach ($tasks as $task) {
-            DB::transaction(function () use ($task) {
-                $previous = $task->status;
-                $this->tasks->update($task, ['status' => TaskStatus::Vencida]);
-                $this->audit->record('task.marked_overdue', 'tareas', $task, ['status' => $previous->value], ['status' => TaskStatus::Vencida->value]);
-            });
-        }
-
-        return $tasks;
     }
 
     /**
@@ -186,7 +177,30 @@ class TaskService
                 $this->audit->record('task.status_changed', 'tareas', $task, ['status' => $old['status']], ['status' => $changes['status']], $actor);
             }
 
+            $this->notifyChanges($task, $changes, $actor);
+
             return $task;
         });
+    }
+
+    /**
+     * Asignación → nuevo responsable (con correo). Otros cambios → responsable (solo interna).
+     * Completada → líder del proyecto.
+     *
+     * @param  array<string, mixed>  $changes
+     */
+    private function notifyChanges(Task $task, array $changes, User $actor): void
+    {
+        $task->load(['assignee', 'project.leader']);
+
+        if (array_key_exists('assigned_to', $changes) && $task->assignee) {
+            $this->notifier->send($task->assignee, new TaskAssigned($task, $actor), $actor);
+        } elseif ($task->assignee) {
+            $this->notifier->send($task->assignee, new TaskUpdated($task, $actor), $actor);
+        }
+
+        if (($changes['status'] ?? null) === TaskStatus::Completada->value) {
+            $this->notifier->send($task->project->leader, new TaskCompleted($task, $actor), $actor);
+        }
     }
 }

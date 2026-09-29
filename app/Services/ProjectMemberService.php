@@ -6,9 +6,13 @@ use App\Exceptions\BusinessRuleException;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
+use App\Notifications\Project\MemberAdded;
+use App\Notifications\Project\MemberRemoved;
+use App\Notifications\Project\ProjectLeaderChanged;
 use App\Repositories\Contracts\ProjectMemberRepositoryInterface;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
+use App\Services\Notifications\NotificationDispatcher;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -23,6 +27,7 @@ class ProjectMemberService
         private readonly TaskRepositoryInterface $tasks,
         private readonly RoleService $roles,
         private readonly AuditService $audit,
+        private readonly NotificationDispatcher $notifier,
     ) {}
 
     /**
@@ -46,6 +51,7 @@ class ProjectMemberService
         DB::transaction(function () use ($project, $user, $actor) {
             $this->members->add($project, $user);
             $this->audit->record('member.added', 'integrantes', $project, [], ['user_id' => $user->id, 'name' => $user->name], $actor);
+            $this->notifier->send($user, new MemberAdded($project, $actor), $actor);
         });
     }
 
@@ -66,6 +72,7 @@ class ProjectMemberService
             $this->audit->record('member.removed', 'integrantes', $project, ['user_id' => $user->id, 'name' => $user->name], [
                 'unassigned_tasks' => $unassigned,
             ], $actor);
+            $this->notifier->send($user, new MemberRemoved($project, $actor), $actor);
         });
     }
 
@@ -89,6 +96,8 @@ class ProjectMemberService
 
             $this->syncLeaderRole($newLeader, $actor);
             $this->syncLeaderRole($previousLeader, $actor);
+
+            $this->notifier->toProject($project, new ProjectLeaderChanged($project, $newLeader, $actor), $actor);
         });
     }
 

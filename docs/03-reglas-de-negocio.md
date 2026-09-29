@@ -163,8 +163,12 @@ Canal **database** = notificación dentro del sistema. Canal **mail** = correo, 
 | Observación del docente (`is_observation`) | Integrantes | ✔ | ✔ |
 | Comentario de un estudiante | Líder + docente | ✔ | |
 
-- Nunca se notifica al propio autor de la acción.
+- Nunca se notifica al propio autor de la acción, y no se repiten destinatarios (`NotificationDispatcher`).
+- El recordatorio de "próxima a vencer" se envía una sola vez por fecha límite (`tasks.due_reminder_sent_at`).
+  Si el líder cambia la fecha, el recordatorio vuelve a habilitarse.
 - Para agregar un canal nuevo basta con añadirlo en el método `via()` de la notificación. Los Services no cambian.
+- Cada notificación guarda en BD `category` (proyecto, tarea, comentario, recordatorio), `title`, `message`
+  y `url`. Al abrirla desde la bandeja, se marca como leída y lleva al recurso.
 
 ## 8. Catálogo de acciones auditadas
 

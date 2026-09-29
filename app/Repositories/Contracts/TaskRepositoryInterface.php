@@ -68,6 +68,13 @@ interface TaskRepositoryInterface
     public function pastDueOpen(CarbonInterface $today): Collection;
 
     /**
+     * Tareas abiertas con responsable, que vencen entre $from y $until y aún no fueron recordadas.
+     *
+     * @return Collection<int, Task>
+     */
+    public function dueSoonWithoutReminder(CarbonInterface $from, CarbonInterface $until): Collection;
+
+    /**
      * Deja sin responsable las tareas no completadas del usuario en el proyecto.
      *
      * @return int Cantidad de tareas afectadas.

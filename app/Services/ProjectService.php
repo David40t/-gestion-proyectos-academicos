@@ -6,9 +6,12 @@ use App\Enums\ProjectStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Project;
 use App\Models\User;
+use App\Notifications\Project\ProjectStatusChanged;
+use App\Notifications\Project\ProjectUpdated;
 use App\Repositories\Contracts\ProjectMemberRepositoryInterface;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Services\Notifications\NotificationDispatcher;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -18,12 +21,22 @@ use Illuminate\Support\Facades\DB;
  */
 class ProjectService
 {
+    /** Campos cuyo cambio se notifica a los integrantes, con su nombre legible. */
+    private const NOTIFIABLE_FIELDS = [
+        'title' => 'título',
+        'start_date' => 'fecha de inicio',
+        'end_date' => 'fecha de finalización',
+        'teacher_id' => 'docente responsable',
+        'objectives' => 'objetivos',
+    ];
+
     public function __construct(
         private readonly ProjectRepositoryInterface $projects,
         private readonly ProjectMemberRepositoryInterface $members,
         private readonly UserRepositoryInterface $users,
         private readonly ProjectMemberService $memberService,
         private readonly AuditService $audit,
+        private readonly NotificationDispatcher $notifier,
     ) {}
 
     /**
@@ -75,7 +88,7 @@ class ProjectService
      */
     public function update(Project $project, array $data, User $actor): Project
     {
-        return DB::transaction(function () use ($project, $data, $actor) {
+        $changes = DB::transaction(function () use ($project, $data, $actor) {
             $original = $project->getRawOriginal();
             $this->projects->update($project, $data);
 
@@ -85,8 +98,15 @@ class ProjectService
                     Arr::only($original, array_keys($changes)), $changes, $actor);
             }
 
-            return $project;
+            return $changes;
         });
+
+        $labels = array_values(array_intersect_key(self::NOTIFIABLE_FIELDS, $changes));
+        if ($labels !== []) {
+            $this->notifier->toProject($project->refresh(), new ProjectUpdated($project, $labels, $actor), $actor);
+        }
+
+        return $project;
     }
 
     public function changeStatus(Project $project, ProjectStatus $status, User $actor): void
@@ -103,6 +123,8 @@ class ProjectService
 
             $this->audit->record('project.status_changed', 'proyectos', $project,
                 ['status' => $previous->value], ['status' => $status->value], $actor);
+
+            $this->notifier->toProject($project, new ProjectStatusChanged($project, $previous, $status, $actor), $actor);
         });
     }
 

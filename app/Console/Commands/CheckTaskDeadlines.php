@@ -2,24 +2,25 @@
 
 namespace App\Console\Commands;
 
-use App\Services\TaskService;
+use App\Services\TaskDeadlineService;
 use Illuminate\Console\Command;
 
 /**
- * Tarea programada diaria: marca tareas vencidas.
- * (Los recordatorios de fechas próximas se agregan en la Fase 8, Notificaciones.)
+ * Tarea programada diaria: marca tareas vencidas y envía recordatorios de fechas próximas.
  */
 class CheckTaskDeadlines extends Command
 {
     protected $signature = 'tasks:check-deadlines';
 
-    protected $description = 'Marca como vencidas las tareas abiertas cuya fecha límite ya pasó';
+    protected $description = 'Marca tareas vencidas y recuerda las próximas a vencer';
 
-    public function handle(TaskService $tasks): int
+    public function handle(TaskDeadlineService $deadlines): int
     {
-        $overdue = $tasks->markOverdueTasks();
+        $overdue = $deadlines->markOverdueTasks();
+        $reminded = $deadlines->sendDueSoonReminders();
 
         $this->info("Tareas marcadas como vencidas: {$overdue->count()}");
+        $this->info("Recordatorios enviados: {$reminded->count()}");
 
         return self::SUCCESS;
     }

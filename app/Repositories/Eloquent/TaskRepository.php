@@ -84,7 +84,8 @@ class TaskRepository implements TaskRepositoryInterface
         return $project->tasks()
             ->with('assignee:id,name')
             ->whereIn('status', [TaskStatus::Pendiente, TaskStatus::EnProgreso])
-            ->whereBetween('due_date', [now()->toDateString(), $until->toDateString()])
+            ->whereDate('due_date', '>=', now()->toDateString())
+            ->whereDate('due_date', '<=', $until->toDateString())
             ->orderBy('due_date')
             ->get();
     }
@@ -92,9 +93,23 @@ class TaskRepository implements TaskRepositoryInterface
     public function pastDueOpen(CarbonInterface $today): Collection
     {
         return Task::query()
+            ->with(['assignee', 'project.leader'])
             ->whereHas('project')
             ->whereIn('status', [TaskStatus::Pendiente, TaskStatus::EnProgreso])
             ->whereDate('due_date', '<', $today->toDateString())
+            ->get();
+    }
+
+    public function dueSoonWithoutReminder(CarbonInterface $from, CarbonInterface $until): Collection
+    {
+        return Task::query()
+            ->with('assignee')
+            ->whereHas('project')
+            ->whereNotNull('assigned_to')
+            ->whereNull('due_reminder_sent_at')
+            ->whereIn('status', [TaskStatus::Pendiente, TaskStatus::EnProgreso])
+            ->whereDate('due_date', '>=', $from->toDateString())
+            ->whereDate('due_date', '<=', $until->toDateString())
             ->get();
     }
 
