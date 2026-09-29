@@ -1,6 +1,6 @@
 # 06 · Estrategia de pruebas
 
-**194 pruebas automatizadas · 1028 aserciones · ~15 s.** Se ejecutan con `php artisan test` sobre SQLite en
+**215 pruebas automatizadas · 1126 aserciones · ~20 s.** Se ejecutan con `php artisan test` sobre SQLite en
 memoria (ADR-011), sin tocar la base MySQL ni enviar correos.
 
 ## 1. Pirámide de pruebas
@@ -8,7 +8,7 @@ memoria (ADR-011), sin tocar la base MySQL ni enviar correos.
 | Suite | Pruebas | Qué verifica | Cómo |
 |---|---:|---|---|
 | **Unit** (`tests/Unit`) | 32 | Reglas de negocio aisladas en los Services | Repositorios **simulados** (Mockery): sin BD, milisegundos |
-| **Feature** (`tests/Feature`) | 150 | Flujos reales: HTTP → Controller → Policy → Service → Repository → BD | Peticiones HTTP completas con `RefreshDatabase` |
+| **Feature** (`tests/Feature`) | 171 | Flujos reales: HTTP → Controller → Policy → Service → Repository → BD | Peticiones HTTP completas con `RefreshDatabase` |
 | **Architecture** (`tests/Architecture`) | 12 | Que el código respeta la arquitectura en capas | Análisis estático del código fuente |
 
 ```bash
@@ -25,7 +25,8 @@ Requisitos mínimos del enunciado (§23) y dónde se verifican:
 |---|---|---|
 | Autenticación | `Feature/Auth/*`, `Security/LoginThrottleTest` | Login/logout auditados, registro como estudiante, contraseña con hash, recuperación de contraseña, bloqueo tras 5 intentos |
 | Autorización | `Authorization/*`, `Security/RouteProtectionTest`, 403 en cada módulo | Un LIDER **de otro proyecto** no puede editar por URL; **todas** las rutas exigen sesión |
-| Permisos por rol | `Authorization/PermissionMatrixTest`, `PermissionGateTest` | Los permisos en BD coinciden **exactamente** con la matriz de `docs/03`; un rol nuevo funciona sin código |
+| Permisos por rol | `Authorization/PermissionMatrixTest`, `PermissionGateTest` | Los permisos en BD coinciden **exactamente** con la matriz de `docs/03`; el administrador tiene todos (incluidos los futuros); un rol nuevo funciona sin código |
+| Administración | `Administration/AdministratorAccessTest`, `UserRoleManagementTest` | Acceso global, reglas que el admin **no** omite (auditoría, comentarios ajenos, observaciones, creación de proyectos, reglas de negocio), gestión de roles con salvaguardas, comando `users:grant-admin` |
 | Creación de proyectos | `Projects/ProjectManagementTest`, `Unit/Services/ProjectServiceTest` | El creador queda como líder, transiciones de estado, borrado restringido |
 | Gestión de integrantes | `Projects/ProjectMemberTest`, `Unit/Services/ProjectMemberServiceTest` | Sin duplicados, el líder no se retira, transferencia de liderazgo, tareas liberadas |
 | Creación de tareas | `Tasks/TaskManagementTest` | Fechas dentro del proyecto, responsable integrante, *scoped binding* |

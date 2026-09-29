@@ -15,6 +15,7 @@ class DemoUserSeeder extends Seeder
 
     /** @var array<string, array{0: string, 1: list<string>}> email => [nombre, roles] */
     private const USERS = [
+        'admin@demo.test' => ['Administrador Demo', [Role::ADMINISTRADOR]],
         'docente@demo.test' => ['Docente Demo', [Role::DOCENTE]],
         'lider@demo.test' => ['Líder Demo', [Role::ESTUDIANTE]], // LIDER lo asigna DemoProjectSeeder vía ProjectService
         'estudiante@demo.test' => ['Estudiante Demo', [Role::ESTUDIANTE]],

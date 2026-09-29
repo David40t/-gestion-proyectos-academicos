@@ -15,6 +15,14 @@ class Role extends Model
 
     public const DOCENTE = 'DOCENTE';
 
+    public const ADMINISTRADOR = 'ADMINISTRADOR';
+
+    /**
+     * Roles que un administrador puede asignar manualmente.
+     * LIDER no se incluye: se asigna automáticamente al liderar un proyecto (ADR-006).
+     */
+    public const ASSIGNABLE = [self::ESTUDIANTE, self::DOCENTE, self::ADMINISTRADOR];
+
     /**
      * @return BelongsToMany<Permission, $this>
      */

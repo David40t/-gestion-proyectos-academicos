@@ -39,8 +39,8 @@ class PermissionMatrixTest extends TestCase
         ],
     ];
 
-    /** Permisos que ningún rol inicial debe tener (reservados para un futuro administrador). */
-    private const RESERVED = ['rol.gestionar', 'auditoria.ver_todo'];
+    /** Permisos exclusivos del administrador. */
+    private const ADMIN_ONLY = ['rol.gestionar', 'auditoria.ver_todo', 'sistema.administrar'];
 
     public function test_effective_permissions_match_the_documented_matrix(): void
     {
@@ -51,11 +51,29 @@ class PermissionMatrixTest extends TestCase
         }
     }
 
-    public function test_reserved_permissions_exist_but_are_unassigned(): void
+    public function test_the_administrator_has_every_permission_of_the_catalog(): void
+    {
+        $admin = $this->userWithRoles(Role::ADMINISTRADOR);
+
+        $this->assertEqualsCanonicalizing(\App\Models\Permission::pluck('name')->all(), $admin->permissionNames()->all());
+        $this->assertTrue($admin->hasGlobalAccess());
+    }
+
+    public function test_a_new_permission_is_granted_to_the_administrator_when_reseeding(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        \App\Models\Permission::create(['name' => 'reporte.exportar', 'module' => 'reporte']);
+
+        $this->seed(RolePermissionSeeder::class);
+
+        $this->assertTrue($this->userWithRoles(Role::ADMINISTRADOR)->hasPermission('reporte.exportar'));
+    }
+
+    public function test_admin_only_permissions_are_not_granted_to_other_roles(): void
     {
         $this->seed(RolePermissionSeeder::class);
 
-        foreach (self::RESERVED as $permission) {
+        foreach (self::ADMIN_ONLY as $permission) {
             $this->assertDatabaseHas('permissions', ['name' => $permission]);
             foreach ([Role::ESTUDIANTE, Role::LIDER, Role::DOCENTE] as $role) {
                 $this->assertFalse($this->userWithRoles($role)->hasPermission($permission), "{$role} no debe tener {$permission}");

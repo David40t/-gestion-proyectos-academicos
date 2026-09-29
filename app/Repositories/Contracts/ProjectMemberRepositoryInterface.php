@@ -15,6 +15,11 @@ interface ProjectMemberRepositoryInterface
     public function isMember(Project $project, User $user): bool;
 
     /**
+     * Cantidad de proyectos (no eliminados) en los que el usuario es integrante.
+     */
+    public function countProjectsOf(User $user): int;
+
+    /**
      * @return Collection<int, User>
      */
     public function membersOf(Project $project): Collection;

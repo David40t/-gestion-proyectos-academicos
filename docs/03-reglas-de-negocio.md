@@ -16,31 +16,34 @@ Para agregar un rol nuevo (p. ej. `COORDINADOR`) basta con insertar el rol, asoc
 necesita reglas por registro distintas, ampliar la Policy correspondiente. **No hay `if ($user->role == ...)`
 en los Controllers.**
 
-### Catálogo de permisos y matriz inicial
+### Catálogo de permisos y matriz
 
-| Permiso | ESTUDIANTE | LIDER | DOCENTE | Restricción adicional (Policy) |
-|---|:-:|:-:|:-:|---|
-| proyecto.ver | ✔ | ✔ | ✔ | Integrante del proyecto, o su docente responsable |
-| proyecto.crear | ✔ | ✔ | | Quien lo crea queda como líder |
-| proyecto.editar | | ✔ | | Líder de *ese* proyecto; proyecto no finalizado ni cancelado |
-| proyecto.cambiar_estado | | ✔ | ✔ | Líder o docente del proyecto; transición válida (§2) |
-| proyecto.eliminar | | ✔ | | Líder, y proyecto en `planeacion` sin tareas |
-| proyecto.gestionar_integrantes | | ✔ | | Líder de *ese* proyecto |
-| tarea.ver | ✔ | ✔ | ✔ | Integrante o docente del proyecto |
-| tarea.crear | | ✔ | | Líder del proyecto |
-| tarea.editar | | ✔ | | Líder del proyecto |
-| tarea.asignar | | ✔ | | Líder; el responsable debe ser integrante |
-| tarea.cambiar_estado | ✔ | ✔ | | Responsable de la tarea, o líder del proyecto |
-| tarea.eliminar | | ✔ | | Líder; proyecto no cerrado. Eliminación lógica y restauración |
-| comentario.ver | ✔ | ✔ | ✔ | Acceso al proyecto |
-| comentario.crear | ✔ | ✔ | ✔ | Acceso al proyecto; `is_observation` solo el docente |
-| comentario.editar | ✔ | ✔ | ✔ | Solo el autor del comentario |
-| comentario.eliminar | ✔ | ✔ | ✔ | Solo el autor; eliminación lógica |
-| notificacion.ver | ✔ | ✔ | ✔ | Solo las propias |
-| notificacion.marcar_leida | ✔ | ✔ | ✔ | Solo las propias |
-| auditoria.ver | | | ✔ | Solo la auditoría de sus proyectos supervisados |
-| auditoria.ver_todo | | | | Reservado: toda la auditoría (incluye autenticación y roles) |
-| rol.gestionar | | | | Reservado para un futuro rol administrador |
+ADMIN = `ADMINISTRADOR`. Su acceso global (`sistema.administrar`) reemplaza la condición de relación
+(líder, integrante o docente), pero **no** el permiso, el estado del proyecto ni las reglas de negocio (ADR-018).
+
+| Permiso | ESTUDIANTE | LIDER | DOCENTE | ADMIN | Restricción adicional (Policy) |
+|---|:-:|:-:|:-:|:-:|---|
+| proyecto.ver | ✔ | ✔ | ✔ | ✔ | Integrante del proyecto o su docente responsable (admin: todos) |
+| proyecto.crear | ✔ | ✔ | | ✔* | Solo quien tiene rol ESTUDIANTE: quien lo crea queda como líder |
+| proyecto.editar | | ✔ | | ✔ | Líder de *ese* proyecto (o admin); proyecto no finalizado ni cancelado |
+| proyecto.cambiar_estado | | ✔ | ✔ | ✔ | Líder o docente del proyecto; admin, cualquier transición **válida** (§2) |
+| proyecto.eliminar | | ✔ | | ✔ | Líder (o admin), y proyecto en `planeacion` sin tareas |
+| proyecto.gestionar_integrantes | | ✔ | | ✔ | Líder de *ese* proyecto (o admin) |
+| tarea.ver | ✔ | ✔ | ✔ | ✔ | Integrante o docente del proyecto (admin: todas) |
+| tarea.crear · tarea.editar · tarea.asignar | | ✔ | | ✔ | Líder del proyecto (o admin); el responsable debe ser integrante |
+| tarea.cambiar_estado | ✔ | ✔ | | ✔ | Responsable de la tarea, líder del proyecto o admin |
+| tarea.eliminar | | ✔ | | ✔ | Líder (o admin); proyecto no cerrado. Eliminación lógica y restauración |
+| comentario.ver · comentario.crear | ✔ | ✔ | ✔ | ✔ | Acceso al proyecto; `is_observation` **solo el docente** del proyecto |
+| comentario.editar | ✔ | ✔ | ✔ | ✔* | **Solo el autor**, incluso para el admin |
+| comentario.eliminar | ✔ | ✔ | ✔ | ✔ | El autor; el admin puede eliminar cualquiera (moderación) |
+| notificacion.ver · notificacion.marcar_leida | ✔ | ✔ | ✔ | ✔ | Solo las propias |
+| auditoria.ver | | | ✔ | ✔ | Auditoría de sus proyectos supervisados |
+| auditoria.ver_todo | | | | ✔ | Toda la auditoría (incluye autenticación y roles) |
+| rol.gestionar | | | | ✔ | Módulo Usuarios: asignar y retirar roles (§1.1) |
+| sistema.administrar | | | | ✔ | Acceso global a todos los proyectos y registros |
+
+\* Tiene el permiso, pero la regla adicional se lo impide en la práctica (el admin sin rol ESTUDIANTE no crea
+proyectos, y nadie edita comentarios ajenos).
 
 **Roles acumulativos:** un usuario puede tener varios roles (`role_user` es N:M) y sus permisos se suman.
 Un líder tiene los roles `ESTUDIANTE` y `LIDER`. En la base de datos, `LIDER` solo tiene sus permisos
@@ -54,8 +57,21 @@ Un líder tiene los roles `ESTUDIANTE` y `LIDER`. En la base de datos, `LIDER` s
 - Tener el rol `LIDER` **no** permite gestionar proyectos ajenos: la Policy siempre exige `leader_id == user.id`.
 
 ### Registro de usuarios
-El registro público crea siempre usuarios con rol `ESTUDIANTE`. Los docentes se crean por seeder
-(o, en el futuro, por un administrador). Nadie puede autoasignarse el rol `DOCENTE`.
+El registro público crea siempre usuarios con rol `ESTUDIANTE`. Nadie puede autoasignarse otro rol: los
+docentes y administradores los designa un administrador (§1.1).
+
+### 1.1 Gestión de roles (módulo Usuarios, ADR-018)
+- Solo con `rol.gestionar` (administrador). Pantalla `/users`: búsqueda y edición de roles por usuario.
+- Roles asignables: `ESTUDIANTE`, `DOCENTE`, `ADMINISTRADOR`. **`LIDER` no se asigna a mano**: se deriva de
+  liderar proyectos y se conserva al editar los demás roles.
+- Salvaguardas (`UserService`, `BusinessRuleException`):
+  - Un administrador no puede quitarse su propio rol de administrador.
+  - Siempre debe quedar al menos un administrador.
+  - No se retira `ESTUDIANTE` a quien participa en proyectos, ni `DOCENTE` a quien supervisa proyectos.
+  - Todo usuario conserva al menos un rol.
+- Cada asignación o retiro se audita (`role.assigned` / `role.revoked`) con el usuario que lo hizo.
+- **Primer administrador** (sin datos demo, p. ej. en producción): `php artisan users:grant-admin correo@…`,
+  auditado como acción del sistema.
 
 ## 2. Proyectos
 
@@ -189,7 +205,7 @@ Canal **database** = notificación dentro del sistema. Canal **mail** = correo, 
 - **Consulta:** `/audits` con filtros por proyecto, módulo, acción, usuario y rango de fechas, más un detalle
   con los valores anterior y nuevo de cada campo. El docente accede también desde el botón "Historial" del proyecto.
 - **Alcance:** con `auditoria.ver` solo se ven los registros con `project_id` de proyectos supervisados. Los
-  eventos de autenticación y roles (sin proyecto) solo los ve quien tenga `auditoria.ver_todo`.
+  eventos de autenticación y roles (sin proyecto) solo los ve quien tenga `auditoria.ver_todo` (administrador).
 - **IP y user agent** se toman del request cuando existe. Las acciones del Scheduler quedan con `user_id` e IP en NULL.
 
 ## 9. Mapa de rutas
@@ -223,6 +239,8 @@ hace cada Controller con su Policy**; `RouteProtectionTest` y `AuthorizationCove
 | GET | `/notifications` | NotificationController@index | `can:notificacion.ver` |
 | PATCH | `/notifications/{notification}/read`, `/notifications/read-all` | NotificationController@read, readAll | `can:notificacion.marcar_leida` + solo las propias |
 | GET | `/audits`, `/audits/{audit}` | AuditController@index, show | AuditPolicy@viewAny / @view |
+| GET | `/users` | UserController@index | UserPolicy@viewAny (`rol.gestionar`) |
+| GET, PUT | `/users/{user}/edit`, `/users/{user}` | UserController@edit, update | UserPolicy@updateRoles |
 
 Las rutas anidadas bajo `/projects/{project}/tasks` y `/comments` usan ***scoped binding***: un id de otro
 proyecto responde 404.

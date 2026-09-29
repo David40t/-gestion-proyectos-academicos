@@ -15,7 +15,18 @@
 
     @include('dashboard.partials.stats')
 
-    @if ($perspective === 'teacher')
+    @if ($perspective === 'admin')
+        @include('dashboard.partials.projects-table', ['title' => 'Proyectos recientes del sistema', 'items' => $projects, 'empty' => 'Aún no hay proyectos registrados.'])
+
+        <div class="grid-2">
+            @include('dashboard.partials.recent-activity')
+            @include('dashboard.partials.users-by-role')
+        </div>
+        <div class="grid-2">
+            @include('dashboard.partials.next-tasks', ['title' => 'Próximas entregas', 'showAssignee' => true])
+            @include('dashboard.partials.recent-comments')
+        </div>
+    @elseif ($perspective === 'teacher')
         @include('dashboard.partials.projects-table', ['title' => 'Proyectos supervisados', 'items' => $projects, 'empty' => 'Aún no tienes proyectos asignados para supervisar.'])
 
         <div class="grid-2">

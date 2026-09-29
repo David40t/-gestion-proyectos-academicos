@@ -9,6 +9,7 @@ use App\Repositories\Contracts\AuditRepositoryInterface;
 use App\Repositories\Contracts\CommentRepositoryInterface;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Services\Notifications\NotificationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -28,6 +29,7 @@ class DashboardService
         private readonly CommentRepositoryInterface $comments,
         private readonly AuditRepositoryInterface $audits,
         private readonly NotificationService $notifications,
+        private readonly UserRepositoryInterface $users,
     ) {}
 
     /**
@@ -35,7 +37,11 @@ class DashboardService
      */
     public function for(User $user): array
     {
-        return $user->hasRole(Role::DOCENTE) ? $this->teacher($user) : $this->student($user);
+        return match (true) {
+            $user->hasGlobalAccess() => $this->administrator($user),
+            $user->hasRole(Role::DOCENTE) => $this->teacher($user),
+            default => $this->student($user),
+        };
     }
 
     /**
@@ -74,6 +80,36 @@ class DashboardService
             'nextTasks' => $this->tasks->nextOpen(null, $projectIds),
             'recentComments' => $this->comments->recentInProjects($projectIds),
             'recentActivity' => $this->audits->recentInProjects($projectIds),
+            'notifications' => $this->notifications->latestUnread($user),
+        ];
+    }
+
+    /**
+     * Vista global del sistema (todas las consultas sin filtro de proyecto).
+     *
+     * @return array<string, mixed>
+     */
+    private function administrator(User $user): array
+    {
+        $totals = $this->projects->totals();
+        $taskStats = $this->tasks->deadlineStats(null, null, $this->upcomingLimit());
+        $usersByRole = $this->users->countByRole();
+
+        return [
+            'perspective' => 'admin',
+            'stats' => [
+                ['label' => 'Usuarios', 'value' => array_sum(array_intersect_key($usersByRole, array_flip(Role::ASSIGNABLE))), 'tone' => 'neutral'],
+                ['label' => 'Proyectos', 'value' => $totals['total'], 'tone' => 'neutral'],
+                ['label' => 'Proyectos activos', 'value' => $totals['active'], 'tone' => 'primary'],
+                ['label' => 'Tareas pendientes', 'value' => $taskStats['pending'], 'tone' => 'neutral'],
+                ['label' => 'Vencen en '.self::UPCOMING_DAYS.' días', 'value' => $taskStats['due_soon'], 'tone' => 'warning'],
+                ['label' => 'Tareas vencidas', 'value' => $taskStats['overdue'], 'tone' => 'danger'],
+            ],
+            'usersByRole' => $usersByRole,
+            'projects' => $this->projects->withStatsLatest(),
+            'nextTasks' => $this->tasks->nextOpen(null, null),
+            'recentComments' => $this->comments->recentInProjects(null),
+            'recentActivity' => $this->audits->recentInProjects(null),
             'notifications' => $this->notifications->latestUnread($user),
         ];
     }

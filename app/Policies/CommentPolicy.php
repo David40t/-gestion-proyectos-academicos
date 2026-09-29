@@ -34,13 +34,18 @@ class CommentPolicy
         return $user->hasPermission('comentario.editar') && $comment->isAuthoredBy($user);
     }
 
+    /**
+     * El autor elimina su comentario; el administrador puede eliminar cualquiera (moderación).
+     * Editar el texto de otra persona no se permite a nadie, ni siquiera al administrador.
+     */
     public function delete(User $user, Comment $comment): bool
     {
-        return $user->hasPermission('comentario.eliminar') && $comment->isAuthoredBy($user);
+        return $user->hasPermission('comentario.eliminar')
+            && ($comment->isAuthoredBy($user) || $user->hasGlobalAccess());
     }
 
     private function participates(User $user, Project $project): bool
     {
-        return $project->isSupervisedBy($user) || $this->members->isMember($project, $user);
+        return $user->hasGlobalAccess() || $project->isSupervisedBy($user) || $this->members->isMember($project, $user);
     }
 }

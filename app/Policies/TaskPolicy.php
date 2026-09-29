@@ -28,7 +28,7 @@ class TaskPolicy
         $project = $task->project;
 
         return $user->hasPermission('tarea.ver')
-            && ($project->isSupervisedBy($user) || $this->members->isMember($project, $user));
+            && ($user->hasGlobalAccess() || $project->isSupervisedBy($user) || $this->members->isMember($project, $user));
     }
 
     public function create(User $user, Project $project): bool
@@ -65,17 +65,20 @@ class TaskPolicy
     }
 
     /**
-     * El responsable actualiza el avance de su tarea; el líder, el de cualquiera del proyecto.
+     * El responsable actualiza el avance de su tarea; el líder (o el administrador), el de cualquiera.
      */
     public function updateProgress(User $user, Task $task): bool
     {
         return $user->hasPermission('tarea.cambiar_estado')
             && ! $task->project->status->isFinal()
-            && ($task->assigned_to === $user->id || $task->project->isLedBy($user));
+            && ($user->hasGlobalAccess() || $task->assigned_to === $user->id || $task->project->isLedBy($user));
     }
 
+    /**
+     * Proyecto abierto y gestionado por el usuario (su líder, o un administrador con acceso global).
+     */
     private function isOpenAndLedBy(Project $project, User $user): bool
     {
-        return $project->isLedBy($user) && ! $project->status->isFinal();
+        return ($user->hasGlobalAccess() || $project->isLedBy($user)) && ! $project->status->isFinal();
     }
 }

@@ -50,7 +50,7 @@ Los estados y prioridades se guardan como `VARCHAR` y se validan con Enums de PH
 | Columna | Tipo | Restricciones |
 |---|---|---|
 | id | BIGINT UNSIGNED | PK |
-| name | VARCHAR(50) | NOT NULL, **UNIQUE** (`ESTUDIANTE`, `LIDER`, `DOCENTE`) |
+| name | VARCHAR(50) | NOT NULL, **UNIQUE** (`ESTUDIANTE`, `LIDER`, `DOCENTE`, `ADMINISTRADOR`) |
 | display_name | VARCHAR(100) | NOT NULL |
 | description | VARCHAR(255) | NULL |
 | timestamps | | |

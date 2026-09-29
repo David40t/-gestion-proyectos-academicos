@@ -44,6 +44,9 @@
             @can('viewAny', App\Models\Audit::class)
                 <a href="{{ route('audits.index') }}" @class(['active' => request()->routeIs('audits.*')])>Auditoría</a>
             @endcan
+            @can('viewAny', App\Models\User::class)
+                <a href="{{ route('users.index') }}" @class(['active' => request()->routeIs('users.*')])>Usuarios</a>
+            @endcan
             {{-- Los enlaces de cada módulo se agregan en sus fases, protegidos con @can. --}}
         </nav>
 

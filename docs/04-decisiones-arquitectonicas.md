@@ -55,8 +55,10 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
   - El esquema coincide exactamente con el pedido.
   - Es fácil de explicar.
   - Evita una dependencia externa cuyo esquema (`model_has_roles`, …) difiere del requerido.
-- **Consecuencias:** los permisos del usuario se cargan una vez por request (memorización en el modelo `User`)
-  para no repetir consultas.
+- **Consecuencias:**
+  - Los permisos del usuario se cargan una vez por request (memorización en el modelo `User`) para no repetir
+    consultas.
+  - Esta flexibilidad se validó al incorporar el rol Administrador después del MVP (ADR-018).
 
 ### ADR-004b · Estados y prioridades como Enums de PHP
 - **Decisión:** usar `ProjectStatus`, `TaskStatus` y `TaskPriority` como *backed enums*, guardados en BD como
@@ -83,7 +85,7 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
   - `projects.leader_id` define el líder de cada proyecto.
   - El rol global `LIDER` da los *permisos* de gestión, y la Policy exige además ser el líder de *ese* proyecto.
   - `RoleService` asigna o retira el rol `LIDER` automáticamente y lo audita.
-- **Justificación:** se respetan los tres roles del enunciado y el modelo de permisos por rol, sin dar
+- **Justificación:** se respetan los roles del enunciado y el modelo de permisos por rol, sin dar
   privilegios sobre proyectos ajenos.
 - **Consecuencias:** `leader_id` y la membresía se mantienen coherentes en `ProjectMemberService`, dentro de
   una transacción.
@@ -241,4 +243,42 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
   - Es global para cubrir también las respuestas sin ruta (404).
 - **Consecuencias:** cualquier `<script>` o `style=""` inline futuro será bloqueado por el navegador, y
   `SecurityHardeningTest` lo detecta. Detalle completo en `docs/07-seguridad.md`.
+
+## ADR-018 · Rol Administrador con acceso global acotado
+
+- **Contexto:** el enunciado inicial pedía no crear un rol administrador como actor principal, pero sí una
+  estructura que permitiera agregarlo después. Una vez terminado el MVP se solicitó incorporarlo con **todos
+  los permisos**.
+- **Decisión:**
+  - Rol `ADMINISTRADOR` con **todos** los permisos del catálogo. El seeder los asigna con un comodín, así que
+    los permisos futuros también quedan incluidos.
+  - Nuevo permiso `sistema.administrar` (acceso global): en las Policies reemplaza **solo** la condición de
+    relación con el registro (ser líder, integrante o docente). **No** omite el permiso, el estado del
+    proyecto ni las reglas de negocio de los Services.
+  - **No** se usa un `Gate::before` que devuelva `true` para el administrador. Ese atajo también saltaría
+    reglas que deben valer para todos:
+
+    | Regla que se mantiene para el administrador | Motivo |
+    |---|---|
+    | La auditoría no se modifica ni elimina | Integridad de la trazabilidad |
+    | No edita el texto de comentarios ajenos (sí puede eliminarlos: moderación) | Autoría del contenido |
+    | No registra observaciones docentes | Son del docente responsable del proyecto |
+    | No crea proyectos | Quien crea queda como líder, y el líder es un estudiante (ADR-006) |
+    | Transiciones de estado válidas, no retirar al líder, etc. | Reglas de negocio en los Services |
+
+  - Se implementa el módulo **Usuarios**, que usa el permiso `rol.gestionar`, hasta ahora reservado: listado
+    y asignación de roles, con salvaguardas:
+    - `LIDER` no se asigna a mano.
+    - Nadie puede quitarse su propio rol de administrador.
+    - Siempre debe quedar al menos un administrador.
+    - No se retira un rol en uso: estudiante con proyectos o docente con proyectos supervisados.
+  - `php artisan users:grant-admin {email}` designa al primer administrador donde no hay datos demo
+    (producción).
+- **Justificación:** demuestra el atributo de **escalabilidad/mantenibilidad** planteado desde la Fase 2.
+  - El rol se agregó con datos (seeder) y cambios acotados en las Policies, sin reescribir Controllers ni
+    la estructura de roles y permisos.
+  - El resto del sistema (auditoría, notificaciones, dashboard) lo absorbió sin cambios estructurales.
+- **Consecuencias:**
+  - El dashboard incorpora una perspectiva de administrador (vista global).
+  - Toda asignación de rol queda auditada (`role.assigned`/`role.revoked`) con el usuario que la hizo.
 

@@ -8,7 +8,7 @@ y seguimiento docente.
 |---|---|
 | **Arquitectura** | Monolito modular · Arquitectura en capas · MVC · Service Layer · Repository Pattern |
 | **Stack** | PHP 8.5 · Laravel 13 · Blade/HTML/CSS/JS · MySQL 8 (compatible con MariaDB) · Eloquent |
-| **Calidad** | 194 pruebas automatizadas (unitarias, funcionales y de arquitectura) · OWASP Top 10 revisado |
+| **Calidad** | 215 pruebas automatizadas (unitarias, funcionales y de arquitectura) · OWASP Top 10 revisado |
 
 ---
 
@@ -35,12 +35,13 @@ y seguimiento docente.
 **Problema:** la información de los proyectos académicos suele estar dispersa en chats, correos y hojas de
 cálculo, y el docente tiene dificultades para conocer el avance real de cada equipo.
 
-**Objetivo:** centralizar la información de los proyectos y facilitar su gestión y seguimiento, con tres
+**Objetivo:** centralizar la información de los proyectos y facilitar su gestión y seguimiento, con cuatro
 roles:
 
 - **Estudiante:** participa en proyectos, actualiza el avance de sus tareas y comenta.
 - **Líder de proyecto:** estudiante que además gestiona el proyecto, sus integrantes y sus tareas.
 - **Docente:** supervisa proyectos, registra observaciones, cierra proyectos revisados y consulta la auditoría.
+- **Administrador:** acceso global a todos los proyectos, auditoría completa y gestión de roles de usuario.
 
 ## 2. Tecnologías
 
@@ -119,8 +120,8 @@ php artisan migrate:fresh --seed  # BORRA todo y vuelve a empezar (solo desarrol
 
 | Seeder | Contenido | Entornos |
 |---|---|---|
-| `RolePermissionSeeder` | 3 roles y 21 permisos (idempotente) | Todos |
-| `DemoUserSeeder` | 4 usuarios de prueba | `local`, `testing` |
+| `RolePermissionSeeder` | 4 roles y 22 permisos; el administrador recibe todos (idempotente) | Todos |
+| `DemoUserSeeder` | 5 usuarios de prueba | `local`, `testing` |
 | `DemoProjectSeeder` | Proyecto demo con líder, integrante y docente | `local`, `testing` |
 | `DemoTaskSeeder` | 5 tareas que cubren todos los estados | `local`, `testing` |
 | `DemoCommentSeeder` | Comentarios y una observación docente | `local`, `testing` |
@@ -144,12 +145,19 @@ php artisan tasks:check-deadlines
 En producción se programa con el cron de Laravel:
 `* * * * * cd /ruta/proyecto && php artisan schedule:run >> /dev/null 2>&1`.
 
+**Primer administrador** en un entorno sin datos demo (p. ej. producción): el usuario se registra
+normalmente y luego, en el servidor:
+```bash
+php artisan users:grant-admin correo@dominio.com
+```
+
 ## 8. Usuarios de prueba
 
 Credenciales ficticias; todos usan la contraseña **`password`**:
 
 | Correo | Rol | Situación en el proyecto demo |
 |---|---|---|
+| `admin@demo.test` | Administrador | Acceso global; gestiona los roles en **Usuarios** |
 | `lider@demo.test` | Estudiante + Líder | Líder del proyecto |
 | `estudiante@demo.test` | Estudiante | Integrante con tareas asignadas |
 | `estudiante2@demo.test` | Estudiante | No participa (sirve para probar accesos denegados) |
@@ -207,7 +215,7 @@ app/
 └── Console/Commands/                        Proceso diario de fechas límite
 ```
 
-Detalle completo en [`docs/01-arquitectura.md`](docs/01-arquitectura.md). Las 17 decisiones arquitectónicas
+Detalle completo en [`docs/01-arquitectura.md`](docs/01-arquitectura.md). Las 18 decisiones arquitectónicas
 (ADR) y su justificación están en [`docs/04-decisiones-arquitectonicas.md`](docs/04-decisiones-arquitectonicas.md).
 
 ## 10. Roles y permisos
@@ -218,24 +226,33 @@ visual):
 1. **Permiso** (por rol, en BD): ¿este *tipo* de usuario puede hacer X? → `Gate::before` con permisos `modulo.accion`.
 2. **Policy** (por registro): ¿puede hacerlo sobre *este* proyecto o tarea? → `app/Policies`.
 
-| Permiso | Estudiante | Líder* | Docente |
-|---|:-:|:-:|:-:|
-| `proyecto.ver` / `proyecto.crear` | ✔ / ✔ | ✔ / ✔ | ✔ / — |
-| `proyecto.editar` · `proyecto.eliminar` · `proyecto.gestionar_integrantes` | | ✔ | |
-| `proyecto.cambiar_estado` | | ✔ | ✔ (finaliza o devuelve desde revisión) |
-| `tarea.ver` | ✔ | ✔ | ✔ |
-| `tarea.crear` · `tarea.editar` · `tarea.asignar` · `tarea.eliminar` | | ✔ | |
-| `tarea.cambiar_estado` | ✔ (solo las suyas) | ✔ | |
-| `comentario.ver` · `crear` · `editar` · `eliminar` (propios) | ✔ | ✔ | ✔ (+ observaciones) |
-| `notificacion.ver` · `notificacion.marcar_leida` | ✔ | ✔ | ✔ |
-| `auditoria.ver` | | | ✔ (sus proyectos) |
-| `auditoria.ver_todo` · `rol.gestionar` | *reservados para un futuro administrador* | | |
+| Permiso | Estudiante | Líder* | Docente | Administrador |
+|---|:-:|:-:|:-:|:-:|
+| `proyecto.ver` / `proyecto.crear` | ✔ / ✔ | ✔ / ✔ | ✔ / — | ✔ (todos) / —** |
+| `proyecto.editar` · `proyecto.eliminar` · `proyecto.gestionar_integrantes` | | ✔ | | ✔ (todos) |
+| `proyecto.cambiar_estado` | | ✔ | ✔ (finaliza o devuelve desde revisión) | ✔ (transiciones válidas) |
+| `tarea.ver` | ✔ | ✔ | ✔ | ✔ |
+| `tarea.crear` · `tarea.editar` · `tarea.asignar` · `tarea.eliminar` | | ✔ | | ✔ |
+| `tarea.cambiar_estado` | ✔ (solo las suyas) | ✔ | | ✔ |
+| `comentario.ver` · `crear` · `editar` · `eliminar` (propios) | ✔ | ✔ | ✔ (+ observaciones) | ✔ (+ eliminar ajenos: moderación) |
+| `notificacion.ver` · `notificacion.marcar_leida` | ✔ | ✔ | ✔ | ✔ |
+| `auditoria.ver` | | | ✔ (sus proyectos) | ✔ |
+| `auditoria.ver_todo` · `rol.gestionar` · `sistema.administrar` | | | | ✔ |
 
 \* El líder es un estudiante con el rol adicional `LIDER`, asignado automáticamente cuando lidera un
 proyecto; los permisos de sus roles se suman. Tener el rol no da acceso a proyectos ajenos: la Policy exige
 ser el líder de *ese* proyecto.
 
-**Agregar un rol nuevo no requiere cambiar código:** basta con insertar el rol y asociarle permisos.
+\*\* El **administrador** tiene todos los permisos y acceso global (`sistema.administrar`), pero **no omite
+las reglas que valen para todos** (ADR-018):
+- la auditoría no se modifica;
+- nadie edita comentarios ajenos;
+- las observaciones son del docente;
+- quien crea un proyecto queda como su líder, y el líder es un estudiante;
+- las reglas de negocio (transiciones válidas, no retirar al líder…) se aplican igual.
+
+**Agregar un rol nuevo no requiere cambiar la estructura:** basta con insertar el rol y asociarle permisos.
+El propio rol Administrador se incorporó así después del MVP (ADR-018).
 
 Reglas completas: [`docs/03-reglas-de-negocio.md`](docs/03-reglas-de-negocio.md).
 
@@ -244,26 +261,26 @@ Reglas completas: [`docs/03-reglas-de-negocio.md`](docs/03-reglas-de-negocio.md)
 | Módulo | Funcionalidades principales |
 |---|---|
 | Autenticación | Registro (siempre como estudiante), login, logout, recuperación de contraseña, bloqueo tras 5 intentos |
-| Roles y permisos | Catálogo en BD, rol Líder automático, matriz verificada por pruebas |
+| Usuarios y roles | Catálogo en BD, rol Líder automático, gestión de roles por el administrador con salvaguardas, matriz verificada por pruebas |
 | Proyectos | CRUD, ciclo de estados (planeación → en progreso → en revisión → finalizado / cancelado), eliminación lógica |
 | Integrantes | Agregar y retirar (sin duplicados), transferir liderazgo, el líder no puede retirarse |
 | Tareas | CRUD, asignación, prioridad, fechas dentro del proyecto, coherencia estado/avance, papelera y restauración |
 | Seguimiento | Avance calculado a partir de las tareas, conteo por estado, próximas fechas límite, dashboard por rol |
 | Comentarios | En proyectos y tareas, observaciones formales del docente, edición y eliminación por el autor |
 | Notificaciones | Internas + correo para eventos críticos, en cola, recordatorios de fechas límite |
-| Auditoría | Registro inmutable de acciones (con IP y valores anteriores/nuevos), consulta con filtros |
+| Auditoría | Registro inmutable de acciones (con IP y valores anteriores/nuevos), consulta con filtros; el administrador ve toda la auditoría |
 
 ## 12. Pruebas
 
 ```bash
-php artisan test                        # 194 pruebas
+php artisan test                        # 215 pruebas
 php artisan test --testsuite=Architecture
 ```
 
 | Suite | Pruebas | Qué verifica |
 |---|---:|---|
 | Unit | 32 | Reglas de los Services con repositorios simulados |
-| Feature | 150 | Flujos HTTP completos, autorización, seguridad, notificaciones, auditoría |
+| Feature | 171 | Flujos HTTP completos, autorización, administración, seguridad, notificaciones, auditoría |
 | Architecture | 12 | Reglas de capas sobre el código fuente |
 
 - Estrategia y trazabilidad requisito → prueba: [`docs/06-estrategia-de-pruebas.md`](docs/06-estrategia-de-pruebas.md).
@@ -276,7 +293,7 @@ php artisan test --testsuite=Architecture
 | [`01-arquitectura.md`](docs/01-arquitectura.md) | Trazabilidad problema → tecnologías, atributos de calidad, capas, módulos, estructura |
 | [`02-modelo-de-datos.md`](docs/02-modelo-de-datos.md) | Diagrama ER, diccionario de datos, relaciones, integridad y normalización |
 | [`03-reglas-de-negocio.md`](docs/03-reglas-de-negocio.md) | Permisos, estados, reglas por módulo, catálogos de notificaciones y auditoría, rutas |
-| [`04-decisiones-arquitectonicas.md`](docs/04-decisiones-arquitectonicas.md) | 17 ADR: contexto, decisión, justificación y consecuencias |
+| [`04-decisiones-arquitectonicas.md`](docs/04-decisiones-arquitectonicas.md) | 18 ADR: contexto, decisión, justificación y consecuencias |
 | [`05-guia-de-pruebas.md`](docs/05-guia-de-pruebas.md) | Instalación, ejecución y escenarios de prueba manual por módulo |
 | [`06-estrategia-de-pruebas.md`](docs/06-estrategia-de-pruebas.md) | Pirámide de pruebas, trazabilidad, arquitectura, N+1, mutaciones |
 | [`07-seguridad.md`](docs/07-seguridad.md) | Revisión OWASP Top 10, configuración de producción, riesgos aceptados |

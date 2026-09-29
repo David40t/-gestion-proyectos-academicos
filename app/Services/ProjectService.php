@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ProjectStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\User;
 use App\Notifications\Project\ProjectStatusChanged;
 use App\Notifications\Project\ProjectUpdated;
@@ -44,7 +45,9 @@ class ProjectService
      */
     public function listFor(User $user): LengthAwarePaginator
     {
-        return $this->projects->paginateVisibleTo($user);
+        return $user->hasGlobalAccess()
+            ? $this->projects->paginateAll()
+            : $this->projects->paginateVisibleTo($user);
     }
 
     public function details(Project $project): Project
@@ -60,6 +63,10 @@ class ProjectService
      */
     public function create(User $creator, array $data): Project
     {
+        if (! $creator->hasRole(Role::ESTUDIANTE)) {
+            throw new BusinessRuleException('Solo un estudiante puede crear un proyecto, porque queda como su líder.');
+        }
+
         return DB::transaction(function () use ($creator, $data) {
             $project = $this->projects->create([
                 ...Arr::except($data, 'member_ids'),

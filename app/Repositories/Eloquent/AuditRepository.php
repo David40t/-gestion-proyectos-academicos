@@ -36,11 +36,11 @@ class AuditRepository implements AuditRepositoryInterface
             ->withQueryString();
     }
 
-    public function recentInProjects(array $projectIds, int $limit = 8): Collection
+    public function recentInProjects(?array $projectIds, int $limit = 8): Collection
     {
         return Audit::query()
             ->with(['user:id,name', 'project:id,title'])
-            ->whereIn('project_id', $projectIds)
+            ->when($projectIds !== null, fn (Builder $query) => $query->whereIn('project_id', $projectIds))
             ->latest('id')
             ->limit($limit)
             ->get();

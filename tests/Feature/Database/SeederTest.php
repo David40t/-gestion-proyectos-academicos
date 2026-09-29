@@ -21,7 +21,7 @@ class SeederTest extends TestCase
         Mail::fake();
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertSame(4, User::count());
+        $this->assertSame(5, User::count());
         $project = Project::sole();
 
         $this->assertTrue($project->members->contains($project->leader), 'El líder es integrante.');

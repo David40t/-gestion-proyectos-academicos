@@ -25,6 +25,27 @@ class ProjectRepository implements ProjectRepositoryInterface
             ->paginate($perPage);
     }
 
+    public function paginateAll(int $perPage = 10): LengthAwarePaginator
+    {
+        return Project::query()
+            ->with(['leader:id,name', 'teacher:id,name'])
+            ->withCount('members')
+            ->withAvg('tasks', 'progress')
+            ->latest()
+            ->paginate($perPage);
+    }
+
+    public function totals(): array
+    {
+        $row = Project::query()
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN status NOT IN (?, ?) THEN 1 ELSE 0 END) as active', ['finalizado', 'cancelado'])
+            ->toBase()
+            ->first();
+
+        return ['total' => (int) $row->total, 'active' => (int) $row->active];
+    }
+
     public function loadDetails(Project $project): Project
     {
         return $project
@@ -67,6 +88,11 @@ class ProjectRepository implements ProjectRepositoryInterface
     public function withStatsSupervisedBy(User $user): Collection
     {
         return $this->withStats(Project::where('teacher_id', $user->id));
+    }
+
+    public function withStatsLatest(int $limit = 10): Collection
+    {
+        return $this->withStats(Project::query()->limit($limit));
     }
 
     /**

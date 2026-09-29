@@ -16,6 +16,20 @@ interface ProjectRepositoryInterface
      */
     public function paginateVisibleTo(User $user, int $perPage = 10): LengthAwarePaginator;
 
+    /**
+     * Todos los proyectos (acceso global de administración).
+     *
+     * @return LengthAwarePaginator<int, Project>
+     */
+    public function paginateAll(int $perPage = 10): LengthAwarePaginator;
+
+    /**
+     * Totales del sistema: proyectos existentes y activos (no finalizados ni cancelados).
+     *
+     * @return array{total: int, active: int}
+     */
+    public function totals(): array;
+
     public function loadDetails(Project $project): Project;
 
     /**
@@ -49,6 +63,13 @@ interface ProjectRepositoryInterface
      * @return Collection<int, Project>
      */
     public function withStatsSupervisedBy(User $user): Collection;
+
+    /**
+     * Proyectos más recientes del sistema con estadísticas (dashboard del administrador).
+     *
+     * @return Collection<int, Project>
+     */
+    public function withStatsLatest(int $limit = 10): Collection;
 
     /**
      * Ids de los proyectos supervisados por el docente (incluye eliminados, para consultar su historial).

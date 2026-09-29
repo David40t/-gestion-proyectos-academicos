@@ -23,10 +23,10 @@ interface AuditRepositoryInterface
     public function search(array $filters, ?array $projectIds, int $perPage = 20): LengthAwarePaginator;
 
     /**
-     * Actividad reciente de un conjunto de proyectos.
+     * Actividad reciente de un conjunto de proyectos (null = todo el sistema).
      *
-     * @param  list<int>  $projectIds
+     * @param  list<int>|null  $projectIds
      * @return Collection<int, Audit>
      */
-    public function recentInProjects(array $projectIds, int $limit = 8): Collection;
+    public function recentInProjects(?array $projectIds, int $limit = 8): Collection;
 }

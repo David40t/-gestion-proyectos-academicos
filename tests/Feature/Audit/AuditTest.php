@@ -5,7 +5,6 @@ namespace Tests\Feature\Audit;
 use App\Enums\ProjectStatus;
 use App\Models\Audit;
 use App\Models\Comment;
-use App\Models\Permission;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\Task;
@@ -117,15 +116,12 @@ class AuditTest extends TestCase
         $this->assertDatabaseHas('audits', ['id' => $audit->id, 'action' => 'project.created']);
     }
 
-    public function test_a_future_admin_role_sees_everything_without_code_changes(): void
+    public function test_the_administrator_sees_the_whole_audit_including_authentication(): void
     {
         $this->post('/login', ['email' => $this->member->email, 'password' => 'password']);
         $this->post('/logout');
 
-        $admin = $this->userWithRoles(Role::ESTUDIANTE);
-        $role = Role::create(['name' => 'ADMINISTRADOR', 'display_name' => 'Administrador']);
-        $role->permissions()->attach(Permission::where('name', 'auditoria.ver_todo')->value('id'));
-        $admin->roles()->attach($role->id, ['created_at' => now()]);
+        $admin = $this->userWithRoles(Role::ADMINISTRADOR);
 
         $this->actingAs($admin)->get(route('audits.index', ['module' => 'auth']))
             ->assertOk()->assertSee('<td>Inicio de sesión</td>', false)->assertSee($this->member->name);

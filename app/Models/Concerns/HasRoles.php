@@ -26,6 +26,15 @@ trait HasRoles
     }
 
     /**
+     * Acceso global de administración: las Policies lo aceptan en lugar de la relación
+     * con el registro (ser líder, integrante o docente). No omite reglas de negocio (ADR-018).
+     */
+    public function hasGlobalAccess(): bool
+    {
+        return $this->hasPermission('sistema.administrar');
+    }
+
+    /**
      * Unión de los permisos de todos los roles del usuario.
      *
      * @return Collection<int, string>

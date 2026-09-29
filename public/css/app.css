@@ -265,3 +265,11 @@ code { font-size: .85rem; background: var(--color-bg); padding: .1rem .35rem; bo
 .error-card { text-align: center; }
 .error-code { margin: 0; font-size: 3rem; font-weight: 800; color: var(--color-primary); }
 .error-actions { display: flex; justify-content: center; gap: .5rem; margin-top: 1.5rem; flex-wrap: wrap; }
+
+/* ---------- Usuarios y roles ---------- */
+.role-option { align-items: flex-start; padding: .6rem; border: 1px solid var(--color-border); border-radius: var(--radius); }
+.role-option input { margin-top: .25rem; }
+.badge-role-administrador { background: #1f2937; color: #fff; }
+.badge-role-docente { background: #fff4de; color: #9a6700; }
+.badge-role-lider { background: #efe7fb; color: #6b3fa0; }
+.badge-role-estudiante { background: #e3edfb; color: var(--color-primary); }

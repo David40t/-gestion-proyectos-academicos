@@ -76,7 +76,7 @@ Blade nunca ejecuta consultas.
 | # | Módulo | Controllers | Services | Repositories | Otros |
 |---|---|---|---|---|---|
 | 1 | Autenticación | (Fortify) | — | — | Vistas `auth/`, Listeners Login/Logout |
-| 2 | Usuarios | — | `UserService`* | `UserRepository` | `User` |
+| 2 | Usuarios | `UserController` (gestión de roles) | `UserService` | `UserRepository` | `User`, `UserPolicy`, comando `users:grant-admin` |
 | 3 | Roles y permisos | — | `RoleService` | `RoleRepository` | `Role`, `Permission`, `Gate::before` en `AppServiceProvider` |
 | 4 | Proyectos | `ProjectController` | `ProjectService` | `ProjectRepository` | `ProjectPolicy`, `ProjectStatus` |
 | 5 | Integrantes | `ProjectMemberController` | `ProjectMemberService` | `ProjectMemberRepository` | — |
@@ -85,8 +85,6 @@ Blade nunca ejecuta consultas.
 | 8 | Comentarios | `CommentController` | `CommentService` | `CommentRepository` | `CommentPolicy` |
 | 9 | Notificaciones | `NotificationController` | `Notifications\NotificationDispatcher`, `Notifications\NotificationService`, `TaskDeadlineService` | `NotificationRepository` | `AppNotification` y clases en `app/Notifications`, `NavigationComposer` |
 | 10 | Auditoría | `AuditController` (solo index/show) | `AuditService` (registro), `AuditQueryService` (consulta) | `AuditRepository` | `AuditPolicy`, Listeners, `lang/es/audit.php` (etiquetas) |
-
-\* Solo si se requiere lógica de usuarios más allá del registro de Fortify (p. ej. listar docentes para un select).
 
 **Relación entre módulos:** los Services pueden colaborar entre sí por inyección de dependencias
 (p. ej. `ProjectService` usa `ProjectMemberService` y `AuditService`), pero nunca acceden al Repository de
@@ -126,17 +124,17 @@ las notificaciones van después del commit para no avisar de algo que no llegó 
 ```
 app/
 ├── Actions/Fortify/          CreateNewUser (valida y delega en UserService), ResetUserPassword
-├── Console/Commands/         CheckTaskDeadlines (tasks:check-deadlines, diario)
+├── Console/Commands/         CheckTaskDeadlines (tasks:check-deadlines, diario) · GrantAdministrator (users:grant-admin)
 ├── Enums/                    ProjectStatus, TaskStatus, TaskPriority (estados y transiciones)
 ├── Exceptions/               BusinessRuleException (violación de regla de negocio)
 ├── Http/
 │   ├── Controllers/          Controllers delgados, uno por recurso
 │   ├── Middleware/           SecurityHeaders (CSP y cabeceras de seguridad)
-│   └── Requests/             Form Requests: Project/, Task/, Comment/, Member/, Audit/
+│   └── Requests/             Form Requests: Project/, Task/, Comment/, Member/, Audit/, User/
 ├── Listeners/                Auditoría de eventos de autenticación (login, logout, fallos, bloqueo, reset)
 ├── Models/                   Entidades Eloquent · Concerns/HasRoles (hasRole, hasPermission)
 ├── Notifications/            AppNotification (base) · Project/, Task/, Comment/
-├── Policies/                 ProjectPolicy, TaskPolicy, CommentPolicy, AuditPolicy
+├── Policies/                 ProjectPolicy, TaskPolicy, CommentPolicy, AuditPolicy, UserPolicy
 ├── Providers/                AppServiceProvider (Gate, modo estricto, replacers) · RepositoryServiceProvider · FortifyServiceProvider
 ├── Repositories/
 │   ├── Contracts/            Interfaces (8)
@@ -151,7 +149,7 @@ database/{migrations, seeders, factories}
 lang/es/                      validación, autenticación, etiquetas de auditoría
 public/{css,js}               estilos y JS estáticos (ADR-010)
 resources/views/              layouts, components, auth, dashboard, projects, tasks, comments,
-                              notifications, audits, errors
+                              notifications, audits, users, errors
 routes/web.php                rutas web (Fortify registra las de autenticación)
 routes/console.php            Scheduler
 tests/{Unit, Feature, Architecture}

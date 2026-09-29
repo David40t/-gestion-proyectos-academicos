@@ -71,6 +71,7 @@ Todos con contraseña `password`:
 
 | Correo | Rol | Situación en el proyecto demo |
 |---|---|---|
+| `admin@demo.test` | Administrador | Acceso global a todos los proyectos; gestiona los roles |
 | `lider@demo.test` | Estudiante + Líder | Líder del proyecto |
 | `estudiante@demo.test` | Estudiante | Integrante, con tareas asignadas |
 | `estudiante2@demo.test` | Estudiante | **No** es integrante (sirve para probar accesos denegados) |
@@ -170,6 +171,7 @@ Valores esperados con los datos recién sembrados (`migrate:fresh --seed`):
 | lider | 1 proyecto · 1 activo · 1 pendiente · 1 vence pronto · 0 vencidas | **Proyectos que lideras** (integrantes, tareas abiertas, vencidas, avance) + las del estudiante |
 | docente | 1 supervisado · 1 activo · **3 pendientes** (todo el proyecto) · 2 vencen pronto · 1 vencida | Proyectos supervisados, Próximas entregas, Comentarios recientes, Actividad reciente, Notificaciones |
 | estudiante2 | Todo en 0 | Mensaje "Aún no participas en ningún proyecto" con enlace para crear uno |
+| admin | 5 usuarios · 1 proyecto · 1 activo · 3 pendientes · 2 vencen pronto · 1 vencida | Proyectos recientes del sistema, Actividad reciente, **Usuarios por rol**, Próximas entregas, Comentarios recientes |
 
 | # | Pasos | Resultado esperado |
 |---|---|---|
@@ -203,7 +205,22 @@ Valores esperados con los datos recién sembrados (`migrate:fresh --seed`):
 
 > Para desactivar JavaScript en Chrome: DevTools (F12) → Ctrl+Shift+P → "Disable JavaScript".
 
-### 3.12 Seguridad
+### 3.12 Administración (usuario `admin@demo.test`)
+| # | Pasos | Resultado esperado |
+|---|---|---|
+| AD1 | Menú → Proyectos | Aparecen **todos** los proyectos del sistema, aunque no participe en ellos |
+| AD2 | Abrir el proyecto demo | Puede editar, gestionar integrantes, cambiar el estado y gestionar tareas. **No** aparece "Registrar como observación docente" |
+| AD3 | Intentar retirar al líder del proyecto (por URL o formulario) | "No se puede retirar al líder…": las reglas de negocio también aplican al administrador |
+| AD4 | En un comentario ajeno | Solo aparece **Eliminar** (moderación), no Editar |
+| AD5 | Abrir `/projects/create` | **403**: quien crea un proyecto queda como líder, y el líder es un estudiante |
+| AD6 | Menú → Auditoría → Módulo "Autenticación" | Ve inicios de sesión, fallos y bloqueos de **todos** los usuarios |
+| AD7 | Menú → **Usuarios** → "Estudiante Dos" (sin proyectos) → desmarcar Estudiante, marcar **Docente** → Guardar | El usuario pasa a Docente; en la auditoría aparecen `Rol asignado` y `Rol retirado` hechos por el administrador |
+| AD8 | Usuarios → editar el propio administrador → desmarcar Administrador | "No puedes quitarte tu propio rol de administrador." |
+| AD9 | Usuarios → "Líder Demo" → desmarcar Estudiante y marcar Docente → Guardar | "Líder Demo participa en proyectos: primero debe ser retirado de ellos." El rol Líder no aparece como opción (es automático) |
+| AD10 | Como `docente@demo.test`, abrir `/users` | **403** |
+| AD11 | En consola: `php artisan users:grant-admin estudiante2@demo.test` | "Estudiante Dos (…) ahora es administrador." y un registro `role.assigned` hecho por el sistema |
+
+### 3.13 Seguridad
 | # | Pasos | Resultado esperado |
 |---|---|---|
 | S1 | DevTools → Red → cualquier página → Encabezados de respuesta | `Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`; **sin** `X-Powered-By` |
@@ -219,7 +236,7 @@ Valores esperados con los datos recién sembrados (`migrate:fresh --seed`):
 ## 4. Pruebas automatizadas
 
 ```bash
-php artisan test                               # suite completa (194 pruebas)
+php artisan test                               # suite completa (215 pruebas)
 php artisan test --testsuite=Unit              # Unit | Feature | Architecture
 php artisan test --filter=ProjectMemberTest    # una clase
 ```

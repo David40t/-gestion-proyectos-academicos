@@ -10,6 +10,7 @@ use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectStatusController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskProgressController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -56,4 +57,7 @@ Route::middleware('auth')->group(function () {
     // Auditoría (solo consulta)
     Route::get('audits', [AuditController::class, 'index'])->name('audits.index');
     Route::get('audits/{audit}', [AuditController::class, 'show'])->name('audits.show');
+
+    // Usuarios y roles (administración)
+    Route::resource('users', UserController::class)->only(['index', 'edit', 'update']);
 });

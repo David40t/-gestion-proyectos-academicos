@@ -4,7 +4,9 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Models\Role;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -18,6 +20,28 @@ class UserRepository implements UserRepositoryInterface
     public function findOrFail(int $id): User
     {
         return User::findOrFail($id);
+    }
+
+    public function findByEmail(string $email): ?User
+    {
+        return User::where('email', $email)->first();
+    }
+
+    public function paginateWithRoles(?string $search, int $perPage = 15): LengthAwarePaginator
+    {
+        return User::query()
+            ->with('roles:id,name,display_name')
+            ->when($search, fn (Builder $query) => $query->where(fn (Builder $q) => $q
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")))
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    public function countByRole(): array
+    {
+        return Role::query()->withCount('users')->pluck('users_count', 'name')->map(fn ($count) => (int) $count)->all();
     }
 
     public function findMany(array $ids): Collection

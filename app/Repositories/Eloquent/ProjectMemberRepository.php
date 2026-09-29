@@ -24,6 +24,11 @@ class ProjectMemberRepository implements ProjectMemberRepositoryInterface
         return $project->members()->whereKey($user->id)->exists();
     }
 
+    public function countProjectsOf(User $user): int
+    {
+        return $user->projects()->count();
+    }
+
     public function membersOf(Project $project): Collection
     {
         return $project->members()->orderBy('name')->get(['users.id', 'users.name', 'users.email']);

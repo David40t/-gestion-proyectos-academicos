@@ -8,6 +8,8 @@ qué prueba automatizada lo verifica.
 | OWASP | Riesgo | Control implementado | Dónde | Prueba |
 |---|---|---|---|---|
 | **A01** Control de acceso | Acceder o modificar recursos ajenos | Permiso por rol (Gate) + Policy por registro en **cada** acción; ocultar botones es solo UX | `Policies/*`, `Gate::before` | `AuthorizationCoverageTest` (todas las acciones autorizan), 403 en cada módulo |
+| A01 | Privilegios excesivos del administrador | Acceso global acotado: `sistema.administrar` reemplaza solo la relación con el registro; **no** hay `Gate::before` que lo apruebe todo. Auditoría inmutable, comentarios ajenos no editables y reglas de negocio vigentes también para el admin | `Policies/*`, ADR-018 | `AdministratorAccessTest` |
+| A01 | Escalada de privilegios | Solo `rol.gestionar` asigna roles; nadie puede autoasignarse roles al registrarse; el admin no puede quitarse su rol y siempre queda al menos uno; todo cambio de rol se audita | `UserService`, `RoleService` | `UserRoleManagementTest`, `RegistrationTest` |
 | A01 | IDOR (cambiar ids en la URL) | *Scoped bindings*: una tarea o comentario solo se resuelve dentro de su proyecto; las notificaciones se buscan solo entre las del usuario | `routes/web.php`, `NotificationRepository` | `TaskManagementTest`, `CommentTest`, `NotificationInboxTest` (404) |
 | A01 | Rutas sin protección | Todas las rutas exigen sesión salvo las de autenticación | `routes/web.php` | `RouteProtectionTest` (barre todas las rutas) |
 | A01 | Redirección abierta | Las notificaciones redirigen solo a rutas internas; "Volver" en errores usa `previousPath()` | `NotificationService`, `errors/layout` | `SecurityHardeningTest` |
@@ -51,6 +53,7 @@ MAIL_TO_ADDRESS=           # vacío: correos a sus destinatarios reales
 LOG_LEVEL=warning
 ```
 Además:
+- Designar el primer administrador con `php artisan users:grant-admin correo@…` (en producción no hay datos demo).
 - Usar un usuario de BD con permisos solo sobre su esquema (como `gestion_user`).
 - Ejecutar `php artisan config:cache` y `route:cache`.
 - Mantener `queue:work` y el cron de `schedule:run`.
