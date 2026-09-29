@@ -144,7 +144,7 @@ database/{migrations, seeders, factories}
 public/{css,js}              estilos y JS estáticos (ADR-010)
 resources/views/{layouts, components, auth, dashboard, projects, tasks, comments, notifications, audits}
 routes/web.php · routes/console.php (Scheduler)
-tests/{Feature, Unit}
+tests/{Unit, Feature, Architecture}
 docs/                        esta documentación + diagramas draw.io
 ```
 

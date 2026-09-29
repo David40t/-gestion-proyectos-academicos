@@ -213,3 +213,18 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
 - **Mensajes:** traducción completa en `lang/es/validation.php`, nombres legibles de campos y *replacers*
   que muestran fechas en `d/m/Y` y "hoy" en lugar de "today".
 
+## ADR-016 · Pruebas de arquitectura y detección de N+1 como garantías automáticas
+
+- **Contexto:** las reglas de capas (sin consultas en Controllers ni vistas, Services sin HTTP, dependencia de
+  interfaces) solo se cumplían por disciplina. Una violación podía pasar inadvertida.
+- **Decisión:**
+  - Una suite `Architecture` analiza el código fuente y falla si se viola una regla de capas.
+  - `Model::preventLazyLoading()` fuera de producción convierte cualquier consulta N+1 en una excepción
+    durante las pruebas.
+  - La IP y el navegador llegan a `AuditService` mediante el objeto de valor `AuditContext`, construido por
+    el contenedor, en lugar de inyectar el `Request`.
+- **Justificación:** convierte los atributos de calidad **mantenibilidad** y **rendimiento** en criterios
+  verificables. La prueba de arquitectura encontró, al crearse, una dependencia HTTP real en `AuditService`.
+- **Consecuencias:** las reglas quedan como documentación ejecutable. Agregar código que las viole rompe
+  la suite. Detalle en `docs/06-estrategia-de-pruebas.md`.
+

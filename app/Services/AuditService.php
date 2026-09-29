@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Repositories\Contracts\AuditRepositoryInterface;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 /**
@@ -24,7 +23,7 @@ class AuditService
 
     public function __construct(
         private readonly AuditRepositoryInterface $audits,
-        private readonly Request $request,
+        private readonly AuditContext $context,
         private readonly AuthFactory $auth,
     ) {}
 
@@ -52,8 +51,8 @@ class AuditService
             'project_id' => $this->projectContext($auditable),
             'old_values' => $this->sanitize($oldValues),
             'new_values' => $this->sanitize($newValues),
-            'ip_address' => $this->request->ip(),
-            'user_agent' => Str::limit((string) $this->request->userAgent(), 250, '') ?: null,
+            'ip_address' => $this->context->ipAddress,
+            'user_agent' => Str::limit((string) $this->context->userAgent, 250, '') ?: null,
         ]);
     }
 

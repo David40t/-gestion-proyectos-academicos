@@ -208,14 +208,13 @@ Valores esperados con los datos recién sembrados (`migrate:fresh --seed`):
 ## 4. Pruebas automatizadas
 
 ```bash
-php artisan test                               # suite completa
+php artisan test                               # suite completa (185 pruebas, ~10 s)
+php artisan test --testsuite=Unit              # Unit | Feature | Architecture
 php artisan test --filter=ProjectMemberTest    # una clase
-php artisan test tests/Unit                    # solo unitarias
 ```
-- Usan **SQLite en memoria** (ADR-011): no tocan la base MySQL ni envían correos.
-- Estructura:
-  - `tests/Unit`: reglas puras (`TaskStateResolver`, `AuditService` con repositorio simulado).
-  - `tests/Feature/{Auth,Authorization,Projects,Tasks,Comments,Notifications,Audit,Dashboard,Errors,Database}`: flujos HTTP completos.
+Usan **SQLite en memoria** (ADR-011): no tocan la base MySQL ni envían correos.
+La estrategia completa (pirámide, trazabilidad requisito → prueba, pruebas de arquitectura y detección de N+1)
+está en **`docs/06-estrategia-de-pruebas.md`**.
 
 ---
 

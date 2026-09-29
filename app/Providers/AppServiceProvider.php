@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\AuditContext;
 use App\View\Composers\NavigationComposer;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
@@ -18,7 +20,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Contexto de auditoría desde el request actual: AuditService no depende de la capa HTTP.
+        $this->app->bind(AuditContext::class, fn ($app) => $app->runningInConsole() && ! $app->runningUnitTests()
+            ? new AuditContext
+            : new AuditContext($app['request']->ip(), $app['request']->userAgent()));
     }
 
     /**
@@ -26,6 +31,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Fuera de producción, cargar una relación de forma perezosa dentro de un listado lanza
+        // una excepción: detecta consultas N+1 durante el desarrollo y en las pruebas.
+        Model::preventLazyLoading(! $this->app->isProduction());
+
         $this->registerPermissionGate();
 
         // Marcado HTML simple para la paginación; los estilos están en public/css/app.css.

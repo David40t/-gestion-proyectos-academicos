@@ -5,10 +5,10 @@ namespace Tests\Unit\Services;
 use App\Models\Audit;
 use App\Models\User;
 use App\Repositories\Contracts\AuditRepositoryInterface;
+use App\Services\AuditContext;
 use App\Services\AuditService;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Auth\Guard;
-use Illuminate\Http\Request;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -36,9 +36,9 @@ class AuditServiceTest extends TestCase
         $auth = $this->createStub(AuthFactory::class);
         $auth->method('guard')->willReturn($guard);
 
-        $request = Request::create('/', 'POST', server: ['REMOTE_ADDR' => '10.0.0.5', 'HTTP_USER_AGENT' => 'PHPUnit']);
+        $context = new AuditContext('10.0.0.5', 'PHPUnit');
 
-        (new AuditService($repository, $request, $auth))->record(
+        (new AuditService($repository, $context, $auth))->record(
             'user.updated',
             'usuarios',
             newValues: ['name' => 'Ana', 'password' => 'secreta', 'remember_token' => 'x', 'api_secret' => 'y'],
