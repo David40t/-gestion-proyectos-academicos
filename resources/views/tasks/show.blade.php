@@ -50,7 +50,7 @@
         <aside class="card">
             <h2>Registrar avance</h2>
             @can('updateProgress', $task)
-                <form method="POST" action="{{ route('projects.tasks.progress.update', [$project, $task]) }}" novalidate>
+                <form method="POST" action="{{ route('projects.tasks.progress.update', [$project, $task]) }}" novalidate data-validate>
                     @csrf
                     @method('PATCH')
                     @include('tasks.partials.state-fields')

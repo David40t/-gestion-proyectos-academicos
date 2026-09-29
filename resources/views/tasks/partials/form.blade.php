@@ -15,7 +15,7 @@
                   min="{{ $project->start_date->format('Y-m-d') }}" />
     <x-form.input name="due_date" label="Fecha límite" type="date"
                   :value="$task->due_date?->format('Y-m-d')" required
-                  max="{{ $project->end_date?->format('Y-m-d') }}" />
+                  max="{{ $project->end_date?->format('Y-m-d') }}" data-after="start_date" />
 </div>
 <p class="muted small">
     Rango del proyecto: {{ $project->start_date->format('d/m/Y') }} — {{ $project->end_date?->format('d/m/Y') ?? 'sin fecha de cierre' }}

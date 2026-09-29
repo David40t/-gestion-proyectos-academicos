@@ -6,7 +6,7 @@
     <h2>Recuperar contraseña</h2>
     <p class="muted">Te enviaremos un enlace para restablecer tu contraseña.</p>
 
-    <form method="POST" action="{{ route('password.email') }}" novalidate>
+    <form method="POST" action="{{ route('password.email') }}" novalidate data-validate>
         @csrf
         <x-form.input name="email" label="Correo electrónico" type="email" required autofocus />
 

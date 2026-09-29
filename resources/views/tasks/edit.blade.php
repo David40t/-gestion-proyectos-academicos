@@ -9,7 +9,7 @@
     </p>
     <h1>Editar tarea</h1>
 
-    <form method="POST" action="{{ route('projects.tasks.update', [$project, $task]) }}" class="card form-card" novalidate>
+    <form method="POST" action="{{ route('projects.tasks.update', [$project, $task]) }}" class="card form-card" novalidate data-validate>
         @csrf
         @method('PUT')
         @include('tasks.partials.form')

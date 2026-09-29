@@ -6,7 +6,7 @@
     <p class="breadcrumb"><a href="{{ route('projects.show', $project) }}">{{ $project->title }}</a> / Nueva tarea</p>
     <h1>Nueva tarea</h1>
 
-    <form method="POST" action="{{ route('projects.tasks.store', $project) }}" class="card form-card" novalidate>
+    <form method="POST" action="{{ route('projects.tasks.store', $project) }}" class="card form-card" novalidate data-validate>
         @csrf
         @include('tasks.partials.form')
 

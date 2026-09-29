@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Una regla de negocio violada es un resultado esperado (no un fallo): no se registra en el log.
+        $exceptions->dontReport(BusinessRuleException::class);
+
         // Las reglas de negocio violadas regresan al formulario con el mensaje, sin error 500.
         $exceptions->render(function (BusinessRuleException $e, Request $request) {
             if ($request->expectsJson()) {

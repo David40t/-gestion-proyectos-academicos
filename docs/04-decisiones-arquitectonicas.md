@@ -193,3 +193,23 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
 - **Consecuencias:** un rol nuevo con otra perspectiva requiere agregar un método al Service y sus
   parciales Blade, sin tocar el resto del sistema.
 
+## ADR-015 · Validación en capas y manejo de errores
+
+- **Contexto:** se exige validar en backend, con JavaScript solo como complemento, y dar al usuario mensajes
+  claros sin exponer información interna.
+- **Decisión:** cada tipo de validación tiene una sola capa responsable.
+
+| Nivel | Dónde | Qué valida | Respuesta |
+|---|---|---|---|
+| 1. Formato | Form Requests (`app/Http/Requests`) | Obligatorios, tipos, longitudes, fechas, enums, existencia de relaciones | Vuelve al formulario con el error en cada campo |
+| 2. Autorización | Policies + Gate de permisos | ¿Puede este usuario actuar sobre este registro? | Página 403 |
+| 3. Reglas de negocio | Services → `BusinessRuleException` | Reglas que dependen del estado (no retirar al líder, transiciones de estado, coherencia estado/avance…) | Vuelve con un mensaje de error y los datos escritos; la transacción se revierte |
+| 4. Complementaria | `public/js/app.js` (`data-validate`) | Obligatorios, longitudes, rangos y orden de fechas, leídos del HTML | Evita el envío y marca el campo, sin sustituir a los niveles 1 a 3 |
+
+- **Errores inesperados:** se registran en el log y se muestra una página genérica (`errors/500`) sin detalles
+  técnicos cuando `APP_DEBUG=false`. Las páginas de error usan un layout independiente (sin BD ni sesión).
+- **`BusinessRuleException` no se registra en el log** (`dontReport`): es un resultado esperado del negocio,
+  no un fallo del sistema.
+- **Mensajes:** traducción completa en `lang/es/validation.php`, nombres legibles de campos y *replacers*
+  que muestran fechas en `d/m/Y` y "hoy" en lugar de "today".
+

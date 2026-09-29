@@ -5,7 +5,7 @@
 @section('content')
     <h1>Editar proyecto</h1>
 
-    <form method="POST" action="{{ route('projects.update', $project) }}" class="card form-card" novalidate>
+    <form method="POST" action="{{ route('projects.update', $project) }}" class="card form-card" novalidate data-validate>
         @csrf
         @method('PUT')
         @include('projects.partials.form')

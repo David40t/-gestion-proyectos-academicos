@@ -5,7 +5,7 @@
 @section('content')
     <h2>Crear cuenta de estudiante</h2>
 
-    <form method="POST" action="{{ route('register') }}" novalidate>
+    <form method="POST" action="{{ route('register') }}" novalidate data-validate>
         @csrf
         <x-form.input name="name" label="Nombre completo" required autofocus autocomplete="name" />
         <x-form.input name="email" label="Correo electrónico" type="email" required autocomplete="username" />

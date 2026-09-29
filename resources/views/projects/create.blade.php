@@ -5,7 +5,7 @@
 @section('content')
     <h1>Nuevo proyecto</h1>
 
-    <form method="POST" action="{{ route('projects.store') }}" class="card form-card" novalidate>
+    <form method="POST" action="{{ route('projects.store') }}" class="card form-card" novalidate data-validate>
         @csrf
         @include('projects.partials.form')
 

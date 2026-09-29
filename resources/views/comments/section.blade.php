@@ -7,7 +7,7 @@
     <h2>{{ $task ? 'Comentarios de la tarea' : 'Comentarios del proyecto' }} ({{ $comments->count() }})</h2>
 
     @can('create', [App\Models\Comment::class, $project])
-        <form method="POST" action="{{ route('projects.comments.store', $project) }}" class="comment-form" novalidate>
+        <form method="POST" action="{{ route('projects.comments.store', $project) }}" class="comment-form" novalidate data-validate>
             @csrf
             @if ($task)
                 <input type="hidden" name="task_id" value="{{ $task->id }}">

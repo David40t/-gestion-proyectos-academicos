@@ -5,7 +5,7 @@
 @section('content')
     <h2>Iniciar sesión</h2>
 
-    <form method="POST" action="{{ route('login') }}" novalidate>
+    <form method="POST" action="{{ route('login') }}" novalidate data-validate>
         @csrf
         <x-form.input name="email" label="Correo electrónico" type="email" required autofocus autocomplete="username" />
         <x-form.input name="password" label="Contraseña" type="password" required autocomplete="current-password" />

@@ -188,6 +188,21 @@ Valores esperados con los datos recién sembrados (`migrate:fresh --seed`):
 | AU6 | docente | Enviar `DELETE /audits/1` (p. ej. con curl) | **405**: no existe ninguna ruta para modificar o borrar |
 | AU7 | cualquiera | Realizar una acción (p. ej. comentar) y revisar la auditoría | Registro con fecha, usuario, IP y valores, sin contraseñas ni tokens |
 
+### 3.11 Validaciones y manejo de errores
+| # | Pasos | Resultado esperado |
+|---|---|---|
+| V1 | Nuevo proyecto: dejar el título vacío y enviar | **Sin recargar la página** (JS), aparece "Este campo es obligatorio." bajo el campo |
+| V2 | Nuevo proyecto: fecha de finalización anterior a la de inicio | JS: "Debe ser igual o posterior a fecha de inicio." |
+| V3 | Desactivar JavaScript en el navegador y repetir V1 y V2 | El **servidor** responde en español: "El campo título es obligatorio.", "La fecha de finalización debe ser igual o posterior…" |
+| V4 | Nueva tarea con fecha límite en el pasado (con JS desactivado) | "…debe ser una fecha posterior o igual a hoy." |
+| V5 | Con JS desactivado, registrar avance "En progreso" con 0% (con JS activo el formulario lo corrige solo) | Mensaje de regla de negocio en el recuadro rojo superior, conservando lo escrito |
+| E1 | Abrir `/pagina-inexistente` | Página propia **404 · Página no encontrada** |
+| E2 | Como docente, abrir `/projects/create` | Página propia **403 · Acceso denegado** |
+| E3 | Abrir un formulario, esperar a que expire la sesión (o borrar la cookie) y enviarlo | Página **419 · La sesión expiró** |
+| E4 | Con `APP_DEBUG=false`, provocar un error interno | Página **500 · Error interno** sin trazas; el detalle queda en `storage/logs/laravel.log` |
+
+> Para desactivar JavaScript en Chrome: DevTools (F12) → Ctrl+Shift+P → "Disable JavaScript".
+
 ---
 
 ## 4. Pruebas automatizadas
@@ -200,7 +215,7 @@ php artisan test tests/Unit                    # solo unitarias
 - Usan **SQLite en memoria** (ADR-011): no tocan la base MySQL ni envían correos.
 - Estructura:
   - `tests/Unit`: reglas puras (`TaskStateResolver`, `AuditService` con repositorio simulado).
-  - `tests/Feature/{Auth,Authorization,Projects,Tasks,Comments,Notifications,Audit,Database}`: flujos HTTP completos.
+  - `tests/Feature/{Auth,Authorization,Projects,Tasks,Comments,Notifications,Audit,Dashboard,Errors,Database}`: flujos HTTP completos.
 
 ---
 

@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Models\User;
 use App\View\Composers\NavigationComposer;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -30,6 +32,32 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFive();
 
         View::composer(['layouts.app', 'notifications.index'], NavigationComposer::class);
+
+        $this->registerDateMessageReplacers();
+    }
+
+    /**
+     * Mensajes de reglas de fecha legibles: "hoy", nombre del campo comparado o fecha en d/m/Y
+     * (en lugar de "today" o "2026-09-01").
+     */
+    private function registerDateMessageReplacers(): void
+    {
+        foreach (['after', 'after_or_equal', 'before', 'before_or_equal', 'date_equals'] as $rule) {
+            Validator::replacer($rule, function (string $message, string $attribute, string $rule, array $parameters, $validator) {
+                $reference = $parameters[0] ?? '';
+
+                $display = match (true) {
+                    in_array($reference, ['today', 'now'], true) => 'hoy',
+                    $reference === 'tomorrow' => 'mañana',
+                    $reference === 'yesterday' => 'ayer',
+                    array_key_exists($reference, $validator->getData()) => $validator->getDisplayableAttribute($reference),
+                    strtotime($reference) !== false => Carbon::parse($reference)->format('d/m/Y'),
+                    default => $reference,
+                };
+
+                return str_replace(':date', $display, $message);
+            });
+        }
     }
 
     /**

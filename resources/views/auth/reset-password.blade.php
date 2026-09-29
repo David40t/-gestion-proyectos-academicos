@@ -5,7 +5,7 @@
 @section('content')
     <h2>Restablecer contraseña</h2>
 
-    <form method="POST" action="{{ route('password.update') }}" novalidate>
+    <form method="POST" action="{{ route('password.update') }}" novalidate data-validate>
         @csrf
         <input type="hidden" name="token" value="{{ $request->route('token') }}">
         <x-form.input name="email" label="Correo electrónico" type="email" :value="$request->email" required />

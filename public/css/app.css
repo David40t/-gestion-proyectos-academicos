@@ -257,3 +257,8 @@ code { font-size: .85rem; background: var(--color-bg); padding: .1rem .35rem; bo
 .project-card:hover { border-color: var(--color-primary); }
 .project-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; margin-bottom: .35rem; }
 .project-card .muted { margin: 0 0 .6rem; }
+
+/* ---------- Páginas de error ---------- */
+.error-card { text-align: center; }
+.error-code { margin: 0; font-size: 3rem; font-weight: 800; color: var(--color-primary); }
+.error-actions { display: flex; justify-content: center; gap: .5rem; margin-top: 1.5rem; flex-wrap: wrap; }

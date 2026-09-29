@@ -5,7 +5,7 @@
 
 <div class="grid-2">
     <x-form.input name="start_date" label="Fecha de inicio" type="date" :value="$project->start_date?->format('Y-m-d')" required />
-    <x-form.input name="end_date" label="Fecha de finalización" type="date" :value="$project->end_date?->format('Y-m-d')" />
+    <x-form.input name="end_date" label="Fecha de finalización" type="date" :value="$project->end_date?->format('Y-m-d')" data-after="start_date" />
 </div>
 
 <x-form.select name="teacher_id" label="Docente responsable" :value="$project->teacher_id"
