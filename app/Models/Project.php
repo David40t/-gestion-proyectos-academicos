@@ -30,6 +30,16 @@ class Project extends Model
         ];
     }
 
+    public function isLedBy(User $user): bool
+    {
+        return $this->leader_id === $user->id;
+    }
+
+    public function isSupervisedBy(User $user): bool
+    {
+        return $this->teacher_id === $user->id;
+    }
+
     /**
      * @return BelongsTo<User, $this>
      */

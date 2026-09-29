@@ -175,7 +175,7 @@ Canal **database** = notificación dentro del sistema. Canal **mail** = correo, 
 | resource | /projects | ProjectController (index, create, store, show, edit, update, destroy) | auth |
 | PATCH | /projects/{project}/status | ProjectStatusController | auth |
 | POST / DELETE | /projects/{project}/members[/{user}] | ProjectMemberController | auth |
-| PATCH | /projects/{project}/leader | ProjectMemberController@changeLeader | auth |
+| PATCH | /projects/{project}/leader | ProjectMemberController@updateLeader | auth |
 | resource (anidado, sin destroy) | /projects/{project}/tasks | TaskController | auth |
 | PATCH | /tasks/{task}/progress | TaskProgressController | auth |
 | POST / PATCH | /projects/{project}/comments[/{comment}] | CommentController | auth |

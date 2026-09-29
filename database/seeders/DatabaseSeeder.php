@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
 
         // Datos de demostración: nunca en producción.
         if (app()->environment(['local', 'testing'])) {
-            $this->call(DemoUserSeeder::class);
+            $this->call([DemoUserSeeder::class, DemoProjectSeeder::class]);
         }
     }
 }

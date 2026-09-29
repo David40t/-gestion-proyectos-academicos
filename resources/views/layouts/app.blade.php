@@ -21,6 +21,9 @@
     <div class="layout">
         <nav class="sidebar">
             <a href="{{ route('dashboard') }}" @class(['active' => request()->routeIs('dashboard')])>Dashboard</a>
+            @can('viewAny', App\Models\Project::class)
+                <a href="{{ route('projects.index') }}" @class(['active' => request()->routeIs('projects.*')])>Proyectos</a>
+            @endcan
             {{-- Los enlaces de cada módulo se agregan en sus fases, protegidos con @can. --}}
         </nav>
 

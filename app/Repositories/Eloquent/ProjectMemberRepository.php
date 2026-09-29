@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Repositories\Eloquent;
+
+use App\Models\Project;
+use App\Models\User;
+use App\Repositories\Contracts\ProjectMemberRepositoryInterface;
+
+class ProjectMemberRepository implements ProjectMemberRepositoryInterface
+{
+    public function add(Project $project, User $user): void
+    {
+        $project->members()->attach($user->id);
+    }
+
+    public function remove(Project $project, User $user): void
+    {
+        $project->members()->detach($user->id);
+    }
+
+    public function isMember(Project $project, User $user): bool
+    {
+        return $project->members()->whereKey($user->id)->exists();
+    }
+}
