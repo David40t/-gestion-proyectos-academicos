@@ -184,3 +184,19 @@ fieldset.field legend { font-weight: 500; margin-bottom: .35rem; }
 .page-item.active .page-link { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
 .page-item.disabled .page-link { color: var(--color-muted); }
 nav .small.text-muted { display: none; }
+
+/* ---------- Seguimiento ---------- */
+.breadcrumb { margin: 0 0 .5rem; font-size: .9rem; color: var(--color-muted); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+.stat { display: flex; flex-direction: column; padding: .75rem; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-bg); }
+.stat-value { font-size: 1.4rem; font-weight: 700; }
+.stat-label { font-size: .8rem; color: var(--color-muted); }
+.stat-completada .stat-value { color: var(--color-success); }
+.stat-vencida .stat-value { color: var(--color-error); }
+.stat-en_progreso .stat-value { color: var(--color-primary); }
+h3 { font-size: 1rem; }
+.upcoming { margin: 0 0 1.25rem; padding-left: 1.2rem; }
+.upcoming li { margin-bottom: .3rem; }
+.badge-priority-alta { background: var(--color-error-bg); color: var(--color-error); }
+.badge-priority-media { background: #fff4de; color: #9a6700; }
+.badge-priority-baja { background: #eef1f6; color: #4b5563; }

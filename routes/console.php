@@ -1,8 +1,10 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+/*
+| Tareas programadas. En el servidor debe existir el cron:
+|   * * * * * cd /ruta/al/proyecto && php artisan schedule:run >> /dev/null 2>&1
+*/
+
+Schedule::command('tasks:check-deadlines')->dailyAt('00:05')->withoutOverlapping();

@@ -37,7 +37,7 @@
                 <dt>Docente responsable</dt>
                 <dd>{{ $project->teacher?->name ?? 'Sin asignar' }}</dd>
                 <dt>Avance general</dt>
-                <dd><x-progress-bar :value="$project->tasks_avg_progress" /></dd>
+                <dd><x-progress-bar :value="$summary['progress']" /></dd>
             </dl>
         </section>
 
@@ -122,5 +122,7 @@
         @endif
     </section>
 
-    {{-- Tareas y seguimiento: Fase 6. Comentarios: Fase 7. --}}
+    @include('projects.partials.tracking')
+
+    {{-- Comentarios: Fase 7. --}}
 @endsection

@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MyTaskController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectStatusController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskProgressController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,4 +30,10 @@ Route::middleware('auth')->group(function () {
     Route::post('projects/{project}/members', [ProjectMemberController::class, 'store'])->name('projects.members.store');
     Route::delete('projects/{project}/members/{member}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
     Route::patch('projects/{project}/leader', [ProjectMemberController::class, 'updateLeader'])->name('projects.leader.update');
+
+    // Tareas (scoped: una tarea solo se resuelve dentro de su propio proyecto; las tareas no se eliminan en el MVP)
+    Route::resource('projects.tasks', TaskController::class)->except('destroy')->scoped();
+    Route::patch('projects/{project}/tasks/{task}/progress', [TaskProgressController::class, 'update'])
+        ->scopeBindings()->name('projects.tasks.progress.update');
+    Route::get('my-tasks', MyTaskController::class)->name('tasks.mine');
 });

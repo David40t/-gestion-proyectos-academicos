@@ -80,8 +80,8 @@ Blade nunca ejecuta consultas.
 | 3 | Roles y permisos | — | `RoleService` | `RoleRepository` | `Role`, `Permission`, `Gate::before` en `AppServiceProvider` |
 | 4 | Proyectos | `ProjectController` | `ProjectService` | `ProjectRepository` | `ProjectPolicy`, `ProjectStatus` |
 | 5 | Integrantes | `ProjectMemberController` | `ProjectMemberService` | `ProjectMemberRepository` | — |
-| 6 | Tareas | `TaskController` | `TaskService` | `TaskRepository` | `TaskPolicy`, `TaskStatus`, `TaskPriority` |
-| 7 | Seguimiento | `DashboardController` | `ProgressService`, `DashboardService` | (usa Task/Project) | Comando `tasks:check-deadlines` |
+| 6 | Tareas | `TaskController`, `TaskProgressController`, `MyTaskController` | `TaskService`, `Tasks\TaskStateResolver` | `TaskRepository` | `TaskPolicy`, `TaskStatus`, `TaskPriority` |
+| 7 | Seguimiento | `ProjectController@show`, `DashboardController` | `ProgressService`, `DashboardService` | `TaskRepository` (agregados) | Comando `tasks:check-deadlines` (diario, `routes/console.php`) |
 | 8 | Comentarios | `CommentController` | `CommentService` | `CommentRepository` | `CommentPolicy` |
 | 9 | Notificaciones | `NotificationController` | (Laravel Notifications) | — | Clases en `app/Notifications` |
 | 10 | Auditoría | `AuditController` | `AuditService` | `AuditRepository` | `AuditPolicy`, Listeners |

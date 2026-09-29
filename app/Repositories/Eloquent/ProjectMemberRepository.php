@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\Contracts\ProjectMemberRepositoryInterface;
+use Illuminate\Support\Collection;
 
 class ProjectMemberRepository implements ProjectMemberRepositoryInterface
 {
@@ -21,5 +22,10 @@ class ProjectMemberRepository implements ProjectMemberRepositoryInterface
     public function isMember(Project $project, User $user): bool
     {
         return $project->members()->whereKey($user->id)->exists();
+    }
+
+    public function membersOf(Project $project): Collection
+    {
+        return $project->members()->orderBy('name')->get(['users.id', 'users.name']);
     }
 }

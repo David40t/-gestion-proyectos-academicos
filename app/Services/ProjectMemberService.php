@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Repositories\Contracts\ProjectMemberRepositoryInterface;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -23,6 +24,14 @@ class ProjectMemberService
         private readonly RoleService $roles,
         private readonly AuditService $audit,
     ) {}
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function membersOf(Project $project): Collection
+    {
+        return $this->members->membersOf($project);
+    }
 
     public function add(Project $project, User $user, User $actor): void
     {

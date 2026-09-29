@@ -109,6 +109,10 @@ un solo archivo.
   Si se registra 100, pasa a `completada`.
 - **Fechas:** `due_date ≥ start_date`, y ambas dentro del rango del proyecto cuando este tiene `end_date`.
 - **Prioridad** (`TaskPriority`): baja, media, alta.
+- **Implementación:** la regla vive en un solo lugar, `App\Services\Tasks\TaskStateResolver` (clase pura con
+  pruebas unitarias). `TaskService` la aplica en toda creación, edición o registro de avance. Así la
+  coherencia no depende del formulario ni del JavaScript.
+- Al crear una tarea, la fecha límite no puede ser anterior a hoy. El responsable debe ser integrante del proyecto.
 - El **estudiante responsable** solo puede cambiar `status` y `progress` de su tarea. El resto de campos
   los edita el líder.
 
@@ -176,8 +180,9 @@ Canal **database** = notificación dentro del sistema. Canal **mail** = correo, 
 | PATCH | /projects/{project}/status | ProjectStatusController | auth |
 | POST / DELETE | /projects/{project}/members[/{user}] | ProjectMemberController | auth |
 | PATCH | /projects/{project}/leader | ProjectMemberController@updateLeader | auth |
-| resource (anidado, sin destroy) | /projects/{project}/tasks | TaskController | auth |
-| PATCH | /tasks/{task}/progress | TaskProgressController | auth |
+| resource (anidado, *scoped*, sin destroy) | /projects/{project}/tasks | TaskController | auth |
+| PATCH | /projects/{project}/tasks/{task}/progress | TaskProgressController | auth |
+| GET | /my-tasks | MyTaskController | auth |
 | POST / PATCH | /projects/{project}/comments[/{comment}] | CommentController | auth |
 | GET, PATCH | /notifications, /notifications/{id}/read, /notifications/read-all | NotificationController | auth |
 | GET | /audits | AuditController | auth |

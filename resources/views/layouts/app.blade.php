@@ -24,6 +24,10 @@
             @can('viewAny', App\Models\Project::class)
                 <a href="{{ route('projects.index') }}" @class(['active' => request()->routeIs('projects.*')])>Proyectos</a>
             @endcan
+            @can('tarea.cambiar_estado')
+                {{-- Solo quienes pueden ser responsables de tareas (estudiantes). --}}
+                <a href="{{ route('tasks.mine') }}" @class(['active' => request()->routeIs('tasks.mine')])>Mis tareas</a>
+            @endcan
             {{-- Los enlaces de cada módulo se agregan en sus fases, protegidos con @can. --}}
         </nav>
 

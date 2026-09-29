@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Project\StoreProjectRequest;
 use App\Http\Requests\Project\UpdateProjectRequest;
 use App\Models\Project;
+use App\Models\Task;
+use App\Services\ProgressService;
 use App\Services\ProjectService;
+use App\Services\TaskService;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +19,8 @@ class ProjectController extends Controller
     public function __construct(
         private readonly ProjectService $projects,
         private readonly UserService $users,
+        private readonly TaskService $tasks,
+        private readonly ProgressService $progress,
     ) {}
 
     public function index(Request $request): View
@@ -57,6 +62,9 @@ class ProjectController extends Controller
             'project' => $this->projects->details($project),
             'canManageMembers' => $user->can('manageMembers', $project),
             'availableStudents' => $user->can('manageMembers', $project) ? $this->users->availableStudents($project) : collect(),
+            'summary' => $this->progress->summary($project),
+            'tasks' => $this->tasks->forProject($project),
+            'canCreateTasks' => $user->can('create', [Task::class, $project]),
             'nextStatuses' => collect($project->status->allowedTransitions())
                 ->filter(fn ($status) => $user->can('changeStatus', [$project, $status])),
         ]);
