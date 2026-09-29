@@ -175,7 +175,7 @@ Canal **database** = notificación dentro del sistema. Canal **mail** = correo, 
 
 | Módulo | Acciones |
 |---|---|
-| auth | `auth.login`, `auth.logout`, `auth.registered`, `auth.password_reset` |
+| auth | `auth.login`, `auth.logout`, `auth.registered`, `auth.password_reset`, `auth.failed` (correo intentado, nunca la contraseña), `auth.lockout` |
 | proyectos | `project.created`, `project.updated`, `project.status_changed`, `project.deleted`, `project.leader_changed` |
 | integrantes | `member.added`, `member.removed` |
 | tareas | `task.created`, `task.updated`, `task.assigned`, `task.status_changed`, `task.marked_overdue`, `task.deleted`, `task.restored` |

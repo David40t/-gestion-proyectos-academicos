@@ -44,7 +44,24 @@ class NotificationService
         $notification = $this->notifications->findForUser($user, $id);
         $this->notifications->markAsRead($notification);
 
-        return $notification->data['url'] ?? route('notifications.index');
+        return $this->internalPath($notification->data['url'] ?? null);
+    }
+
+    /**
+     * Solo se redirige a rutas internas (ruta + fragmento), nunca a otro dominio:
+     * evita redirecciones abiertas aunque el dato guardado fuera manipulado.
+     */
+    private function internalPath(?string $url): string
+    {
+        $path = parse_url((string) $url, PHP_URL_PATH);
+
+        if (! is_string($path) || ! str_starts_with($path, '/') || str_starts_with($path, '//')) {
+            return route('notifications.index', absolute: false);
+        }
+
+        $fragment = parse_url((string) $url, PHP_URL_FRAGMENT);
+
+        return $path.($fragment ? '#'.$fragment : '');
     }
 
     public function markAllAsRead(User $user): int

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use Illuminate\Auth\Events\Lockout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -35,11 +36,19 @@ class FortifyServiceProvider extends ServiceProvider
         $this->registerViews();
 
         // Máximo 5 intentos de login por minuto por combinación email + IP.
+        // Al bloquear se emite el evento nativo Lockout (lo audita RecordLockout) y se muestra la página 429.
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 
-            return Limit::perMinute(5)->by($throttleKey);
+            return Limit::perMinute(5)->by($throttleKey)->response(function (Request $request, array $headers) {
+                event(new Lockout($request));
+
+                return response()->view('errors.429', [], 429, $headers);
+            });
         });
+
+        // Todas las rutas de Fortify (registro, recuperación, etc.): 30 solicitudes por minuto por IP.
+        RateLimiter::for('auth-forms', fn (Request $request) => Limit::perMinute(30)->by($request->ip()));
     }
 
     private function registerViews(): void

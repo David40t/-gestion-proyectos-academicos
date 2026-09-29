@@ -19,7 +19,8 @@
             @hasSection('actions')
                 @yield('actions')
             @else
-                <a href="{{ url()->previous() !== url()->current() ? url()->previous() : url('/') }}" class="btn btn-secondary">Volver</a>
+                {{-- previousPath(): solo la ruta interna, nunca un Referer externo. --}}
+                <a href="{{ url(url()->previousPath() ?: '/') }}" class="btn btn-secondary">Volver</a>
                 <a href="{{ url('/') }}" class="btn btn-primary">Ir al inicio</a>
             @endif
         </div>

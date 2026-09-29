@@ -203,12 +203,23 @@ Valores esperados con los datos recién sembrados (`migrate:fresh --seed`):
 
 > Para desactivar JavaScript en Chrome: DevTools (F12) → Ctrl+Shift+P → "Disable JavaScript".
 
+### 3.12 Seguridad
+| # | Pasos | Resultado esperado |
+|---|---|---|
+| S1 | DevTools → Red → cualquier página → Encabezados de respuesta | `Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`; **sin** `X-Powered-By` |
+| S2 | Seis logins fallidos seguidos con el mismo correo | Página 429. En la BD (los eventos de autenticación solo los ve `auditoria.ver_todo`, sin asignar por ahora): registros `auth.failed` y `auth.lockout` **sin la contraseña** |
+| S3 | Registrarse con la contraseña `12345678` | "El campo contraseña debe contener al menos una letra." |
+| S4 | Consola de DevTools: `document.body.insertAdjacentHTML('beforeend','<img src=x onerror=alert(1)>')` | No aparece ninguna alerta: la CSP bloquea el manejador inline (aviso en la consola) |
+| S5 | `composer audit` | "No security vulnerability advisories found." |
+
+> Consulta rápida de S2: `SELECT action, user_id, new_values, ip_address FROM audits WHERE module='auth' ORDER BY id DESC LIMIT 10;`
+
 ---
 
 ## 4. Pruebas automatizadas
 
 ```bash
-php artisan test                               # suite completa (185 pruebas, ~10 s)
+php artisan test                               # suite completa (194 pruebas)
 php artisan test --testsuite=Unit              # Unit | Feature | Architecture
 php artisan test --filter=ProjectMemberTest    # una clase
 ```

@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,9 +32,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Fuera de producción, cargar una relación de forma perezosa dentro de un listado lanza
-        // una excepción: detecta consultas N+1 durante el desarrollo y en las pruebas.
-        Model::preventLazyLoading(! $this->app->isProduction());
+        // Modo estricto fuera de producción: excepción ante consultas N+1 (lazy loading en listados),
+        // atributos no permitidos descartados en silencio (asignación masiva) o atributos inexistentes.
+        Model::shouldBeStrict(! $this->app->isProduction());
+
+        // Política de contraseñas: mínimo 8 caracteres, con letras y números.
+        Password::defaults(fn () => Password::min(8)->letters()->numbers());
 
         $this->registerPermissionGate();
 

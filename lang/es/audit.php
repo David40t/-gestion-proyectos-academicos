@@ -20,6 +20,8 @@ return [
         'auth.logout' => 'Cierre de sesión',
         'auth.registered' => 'Registro de usuario',
         'auth.password_reset' => 'Restablecimiento de contraseña',
+        'auth.failed' => 'Inicio de sesión fallido',
+        'auth.lockout' => 'Bloqueo por intentos fallidos',
         'role.assigned' => 'Rol asignado',
         'role.revoked' => 'Rol retirado',
         'project.created' => 'Proyecto creado',

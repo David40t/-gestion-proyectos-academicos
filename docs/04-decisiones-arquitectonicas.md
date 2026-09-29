@@ -228,3 +228,17 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
 - **Consecuencias:** las reglas quedan como documentación ejecutable. Agregar código que las viole rompe
   la suite. Detalle en `docs/06-estrategia-de-pruebas.md`.
 
+## ADR-017 · Defensa en profundidad: cabeceras HTTP y CSP estricta
+
+- **Contexto:** Blade ya escapa el contenido, pero un único control ante XSS o clickjacking es frágil.
+- **Decisión:** un middleware **global** `SecurityHeaders` agrega CSP (`default-src 'self'`, sin
+  `unsafe-inline`), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` y HSTS en
+  HTTPS. Para que la CSP sea estricta, las vistas no tienen scripts ni estilos inline: la barra de progreso
+  usa el elemento nativo `<progress>`.
+- **Justificación:**
+  - Si un contenido llegara a escapar la protección de Blade, el navegador igual se negaría a ejecutar
+    scripts inline.
+  - Es global para cubrir también las respuestas sin ruta (404).
+- **Consecuencias:** cualquier `<script>` o `style=""` inline futuro será bloqueado por el navegador, y
+  `SecurityHardeningTest` lo detecta. Detalle completo en `docs/07-seguridad.md`.
+

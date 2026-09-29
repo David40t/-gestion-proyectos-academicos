@@ -1,6 +1,6 @@
 # 06 · Estrategia de pruebas
 
-**185 pruebas automatizadas · 949 aserciones · ~10 s.** Se ejecutan con `php artisan test` sobre SQLite en
+**194 pruebas automatizadas · 1028 aserciones · ~15 s.** Se ejecutan con `php artisan test` sobre SQLite en
 memoria (ADR-011), sin tocar la base MySQL ni enviar correos.
 
 ## 1. Pirámide de pruebas
@@ -8,7 +8,7 @@ memoria (ADR-011), sin tocar la base MySQL ni enviar correos.
 | Suite | Pruebas | Qué verifica | Cómo |
 |---|---:|---|---|
 | **Unit** (`tests/Unit`) | 32 | Reglas de negocio aisladas en los Services | Repositorios **simulados** (Mockery): sin BD, milisegundos |
-| **Feature** (`tests/Feature`) | 141 | Flujos reales: HTTP → Controller → Policy → Service → Repository → BD | Peticiones HTTP completas con `RefreshDatabase` |
+| **Feature** (`tests/Feature`) | 150 | Flujos reales: HTTP → Controller → Policy → Service → Repository → BD | Peticiones HTTP completas con `RefreshDatabase` |
 | **Architecture** (`tests/Architecture`) | 12 | Que el código respeta la arquitectura en capas | Análisis estático del código fuente |
 
 ```bash
@@ -33,7 +33,7 @@ Requisitos mínimos del enunciado (§23) y dónde se verifican:
 | Notificaciones | `Notifications/*`, `Unit/Services/NotificationDispatcherTest` | Destinatario y **canal** correctos por evento, sin avisar al autor, recordatorio único |
 | Auditoría | `Audit/AuditTest`, `Unit/Services/AuditServiceTest` | Contexto de proyecto, alcance del docente, solo lectura (405), sin datos sensibles |
 | Transacciones | `Database/TransactionRollbackTest` | Una falla a mitad de camino no deja datos parciales ni envía notificaciones |
-| Seguridad | `Security/*`, `Comments/CommentTest` (XSS), `Errors/*` | Asignación masiva ignorada, CSRF en todas las rutas de escritura, el error 500 no expone detalles |
+| Seguridad | `Security/*`, `Comments/CommentTest` (XSS), `Errors/*` | Todas las acciones autorizan, asignación masiva ignorada, CSRF en todas las rutas de escritura, cabeceras y CSP, sin redirección abierta, política de contraseñas, límites de intentos, el error 500 no expone detalles. Ver `docs/07-seguridad.md` |
 | Seeders | `Database/SeederTest`, `PermissionMatrixTest` | Datos demo coherentes, idempotencia, sembrar no envía correos |
 
 ## 3. Garantías transversales

@@ -5,5 +5,5 @@
 @section('message', 'Por seguridad, el formulario caducó. Vuelve a la página anterior, recárgala e inténtalo de nuevo.')
 
 @section('actions')
-    <a href="{{ url()->previous() }}" class="btn btn-primary">Volver y recargar</a>
+    <a href="{{ url(url()->previousPath() ?: '/') }}" class="btn btn-primary">Volver y recargar</a>
 @endsection

@@ -101,7 +101,8 @@ return [
     |
     */
 
-    'middleware' => ['web'],
+    // "auth-forms": límite por IP para registro y recuperación de contraseña (FortifyServiceProvider).
+    'middleware' => ['web', 'throttle:auth-forms'],
 
     /*
     |--------------------------------------------------------------------------
