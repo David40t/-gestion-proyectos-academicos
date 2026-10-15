@@ -282,3 +282,24 @@ Cada decisión sigue el formato **Contexto → Decisión → Justificación → 
   - El dashboard incorpora una perspectiva de administrador (vista global).
   - Toda asignación de rol queda auditada (`role.assigned`/`role.revoked`) con el usuario que la hizo.
 
+## ADR-019 · Entorno reproducible con Docker Compose
+
+- **Contexto:** la instalación manual exige PHP 8.3+ con varias extensiones, Composer y un servidor MySQL
+  configurado a mano, lo que dificulta que el docente o un nuevo integrante ejecute el sistema.
+- **Decisión:** se agrega un `Dockerfile` (Apache + PHP 8.4) y un `docker-compose.yml` con cuatro servicios
+  que reutilizan **la misma imagen** de la aplicación:
+  - `app`: servidor web; al arrancar genera la `APP_KEY` si falta, migra y siembra solo si la base está vacía.
+  - `queue`: `queue:work`, el worker que exige ADR-008.
+  - `scheduler`: `schedule:work`, en lugar del cron del servidor.
+  - `db`: MySQL 8.4 con datos en un volumen persistente.
+- **Justificación:**
+  - Un solo comando (`docker compose up -d --build`) levanta el sistema completo, igual en cualquier equipo.
+  - No cambia la arquitectura: sigue siendo un **monolito** con una sola base de datos; los contenedores
+    `queue` y `scheduler` son procesos del mismo código, no servicios independientes.
+- **Consecuencias:**
+  - La instalación manual sigue siendo válida; Docker es una alternativa.
+  - Los cambios de código requieren reconstruir la imagen. La configuración se toma de variables de entorno
+    (`docker-compose.yml` y un `.env` opcional), no de un `.env` dentro de la imagen.
+  - `phpunit.xml` fija sus variables con `force="true"` y también como `<server>`: Laravel lee primero
+    `$_SERVER`, donde Docker pone `DB_CONNECTION=mysql`, y sin esto las pruebas (`RefreshDatabase`)
+    vaciarían la base real en lugar de usar SQLite en memoria (ADR-011).

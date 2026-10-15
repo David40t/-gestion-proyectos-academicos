@@ -66,7 +66,47 @@ roles:
 
 > No se necesita Node.js: el frontend no requiere compilación (ADR-010).
 
+**Alternativa con Docker:** basta con **Docker** y **Docker Compose v2**; no hace falta instalar PHP,
+Composer ni MySQL (ver §4.1).
+
 ## 4. Instalación
+
+### 4.1 Con Docker (recomendado)
+
+```bash
+git clone <url-del-repositorio> gestion-proyectos-academicos
+cd gestion-proyectos-academicos
+docker compose up -d --build
+```
+
+Abrir **http://localhost:8000** e ingresar con los [usuarios de prueba](#8-usuarios-de-prueba). El primer
+arranque tarda un poco más: el contenedor espera a MySQL, ejecuta las migraciones y siembra los datos demo
+(solo si la base está vacía).
+
+| Servicio | Función |
+|---|---|
+| `app` | Apache + PHP 8.4 con la aplicación, en el puerto `8000` |
+| `queue` | `php artisan queue:work`: procesa notificaciones y correos |
+| `scheduler` | `php artisan schedule:work`: ejecuta `tasks:check-deadlines` cada día |
+| `db` | MySQL 8.4, expuesto en el puerto `3307` del equipo (para clientes como DBeaver) |
+
+La `APP_KEY` se genera sola en el primer arranque y se guarda en el volumen `storage`
+(`storage/app/docker/.env`), compartida por los cuatro contenedores. Los valores por
+defecto (puertos, credenciales de BD, correo) se cambian con un archivo `.env` junto a `docker-compose.yml`,
+p. ej. `APP_PORT=8080` o `MAIL_MAILER=smtp` + `MAIL_*`.
+
+```bash
+docker compose logs -f app                      # ver el arranque y los errores
+docker compose exec -u www-data app php artisan test   # pruebas (SQLite en memoria, no tocan MySQL)
+docker compose exec -u www-data app php artisan tasks:check-deadlines
+docker compose exec -u www-data app php artisan users:grant-admin correo@dominio.com
+docker compose down                             # detener (los datos se conservan)
+docker compose down -v                          # detener y BORRAR la base de datos y storage
+```
+
+Tras modificar el código, reconstruir la imagen con `docker compose up -d --build`. Decisión: ADR-019.
+
+### 4.2 Instalación manual
 
 ```bash
 # 1. Clonar e instalar dependencias
@@ -293,7 +333,7 @@ php artisan test --testsuite=Architecture
 | [`01-arquitectura.md`](docs/01-arquitectura.md) | Trazabilidad problema → tecnologías, atributos de calidad, capas, módulos, estructura |
 | [`02-modelo-de-datos.md`](docs/02-modelo-de-datos.md) | Diagrama ER, diccionario de datos, relaciones, integridad y normalización |
 | [`03-reglas-de-negocio.md`](docs/03-reglas-de-negocio.md) | Permisos, estados, reglas por módulo, catálogos de notificaciones y auditoría, rutas |
-| [`04-decisiones-arquitectonicas.md`](docs/04-decisiones-arquitectonicas.md) | 18 ADR: contexto, decisión, justificación y consecuencias |
+| [`04-decisiones-arquitectonicas.md`](docs/04-decisiones-arquitectonicas.md) | 19 ADR: contexto, decisión, justificación y consecuencias |
 | [`05-guia-de-pruebas.md`](docs/05-guia-de-pruebas.md) | Instalación, ejecución y escenarios de prueba manual por módulo |
 | [`06-estrategia-de-pruebas.md`](docs/06-estrategia-de-pruebas.md) | Pirámide de pruebas, trazabilidad, arquitectura, N+1, mutaciones |
 | [`07-seguridad.md`](docs/07-seguridad.md) | Revisión OWASP Top 10, configuración de producción, riesgos aceptados |
